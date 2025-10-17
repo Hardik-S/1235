@@ -58,6 +58,14 @@
     }
   }
 
+  function syncRewardVisibility(chestSection, rewardSection, index, totalLocks) {
+    if (!chestSection || !rewardSection) return;
+    const isComplete = index >= totalLocks;
+    chestSection.classList.toggle('view-card--hidden', isComplete);
+    rewardSection.classList.toggle('reward--revealed', isComplete);
+    rewardSection.classList.toggle('reward--sealed', !isComplete);
+  }
+
   function clamp(value, min, max) {
     return Math.min(Math.max(value, min), max);
   }
@@ -73,6 +81,7 @@
     const gateMsg = document.getElementById('gateMsg');
     const gateSection = document.getElementById('gate');
     const chestSection = document.getElementById('chest');
+    const rewardSection = document.getElementById('reward');
     const chestHeading = document.getElementById('chest-heading');
     const atlasForm = document.getElementById('atlasForm');
     const lockGrid = document.getElementById('lockGrid');
@@ -81,6 +90,7 @@
     const lockInput = document.getElementById('lockInput');
     const lockBtn = document.getElementById('lockBtn');
     const lockMessage = document.getElementById('lockMessage');
+    const resetBtn = document.getElementById('resetBtn');
 
     if (!atlasInput || !atlasBtn || !gateMsg || !gateSection || !chestSection || !atlasForm) {
       return;
@@ -229,6 +239,8 @@
       setLockMessage(lockMessage, 'Type the next sigil.');
     }
 
+    syncRewardVisibility(chestSection, rewardSection, currentLockIndex, totalLocks);
+
     lockForm.addEventListener('submit', (event) => {
       event.preventDefault();
       if (currentLockIndex >= totalLocks) {
@@ -256,11 +268,35 @@
         } else {
           setLockMessage(lockMessage, 'Sigil unlocked.', 'success');
         }
+
+        syncRewardVisibility(chestSection, rewardSection, currentLockIndex, totalLocks);
       } else {
         setLockMessage(lockMessage, 'Wrong sigil. Retry.', 'error');
         lockInput.focus({ preventScroll: true });
         lockInput.select();
       }
     });
+
+    function resetExperience() {
+      window.localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem(LOCK_STORAGE_KEY);
+      currentLockIndex = 0;
+      setGateState(sections, false);
+      updateGateMessage(gateMsg, PROMPT_MESSAGE);
+      atlasInput.value = '';
+      lockInput.value = '';
+      setLockMessage(lockMessage, 'Type the next sigil.');
+      updateLockProgress(currentLockIndex);
+      syncLockTiles(currentLockIndex);
+      setCompletionState(false);
+      syncRewardVisibility(chestSection, rewardSection, currentLockIndex, totalLocks);
+      atlasInput.focus({ preventScroll: true });
+    }
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        resetExperience();
+      });
+    }
   });
 })();
