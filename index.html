@@ -90,12 +90,29 @@
       </div>
     </section>
 
-    <section id="reward" class="view-card" aria-labelledby="reward-heading">
+    <section id="reward" class="view-card reward reward--sealed" aria-labelledby="reward-heading">
       <div class="view-icon" aria-hidden="true">🎖️</div>
       <div class="view-content">
         <h2 id="reward-heading">Reward Chamber</h2>
         <p>The chamber awaits your triumph. Claim the relic once the gate and chest trials are complete.</p>
-        <div class="placeholder">Reward view interface placeholder</div>
+        <div class="reward-card" role="status" aria-live="polite" aria-atomic="true">
+          <p class="reward-card__intro">The gatekeeper proclaims your victory. Take your spoils:</p>
+          <ul class="reward-list">
+            <li class="reward-list__item">
+              <span class="reward-list__icon" aria-hidden="true">🌟</span>
+              <span class="reward-list__text">Starlit Emblem of Passage</span>
+            </li>
+            <li class="reward-list__item">
+              <span class="reward-list__icon" aria-hidden="true">🗝️</span>
+              <span class="reward-list__text">Key of Renewed Paths</span>
+            </li>
+            <li class="reward-list__item">
+              <span class="reward-list__icon" aria-hidden="true">📜</span>
+              <span class="reward-list__text">Charter of the Gatekeeper's Guild</span>
+            </li>
+          </ul>
+          <button id="resetBtn" type="button" class="reset-button">Reset the Trials</button>
+        </div>
       </div>
     </section>
   </main>
