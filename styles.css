@@ -192,6 +192,136 @@ body {
   opacity: 1;
 }
 
+.lock-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.lock-progress {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.lock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.lock-tile {
+  display: grid;
+  gap: 0.35rem;
+  align-items: center;
+  justify-items: center;
+  padding: 0.9rem 0.75rem;
+  border: 2px solid rgba(82, 96, 109, 0.2);
+  border-radius: 16px;
+  background: var(--surface-muted);
+  text-align: center;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.lock-tile--active {
+  border-color: rgba(63, 131, 248, 0.55);
+  background: rgba(63, 131, 248, 0.1);
+}
+
+.lock-tile__icon {
+  font-size: 1.75rem;
+}
+
+.lock-tile__label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.lock-tile.unlocked {
+  border-color: rgba(15, 122, 77, 0.6);
+  background: rgba(15, 122, 77, 0.12);
+  transform: translateY(-2px);
+}
+
+.lock-tile.unlocked .lock-tile__label {
+  color: #0f7a4d;
+}
+
+.lock-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.lock-form__controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+}
+
+#lockInput {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 2px solid rgba(82, 96, 109, 0.25);
+  border-radius: 14px;
+  font-size: 1rem;
+  color: var(--text-strong);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#lockInput:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(63, 131, 248, 0.2);
+}
+
+#lockBtn {
+  padding: 0.75rem 1.35rem;
+  border: none;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+#lockBtn:hover,
+#lockBtn:focus-visible {
+  background: var(--accent-strong);
+}
+
+#lockBtn:active {
+  transform: translateY(1px);
+}
+
+#lockBtn:disabled {
+  background: rgba(82, 96, 109, 0.35);
+  cursor: not-allowed;
+}
+
+.lock-message {
+  min-height: 1.25rem;
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
+}
+
+.lock-message--success {
+  color: #0f7a4d;
+}
+
+.lock-message--error {
+  color: var(--danger);
+}
+
 @media (min-width: 768px) {
   body {
     display: grid;
