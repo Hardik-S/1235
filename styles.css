@@ -3,7 +3,10 @@
   --surface-muted: #f2f4f8;
   --text: #1f2933;
   --text-muted: #52606d;
+  --text-strong: #0b1f33;
   --accent: #3f83f8;
+  --accent-strong: #1f6cf2;
+  --danger: #d61f69;
   --border-radius: 18px;
   --shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
 }
@@ -93,6 +96,102 @@ body {
   letter-spacing: 0.08em;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gate-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.gate-form__controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+}
+
+#atlas {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: 2px solid rgba(82, 96, 109, 0.25);
+  border-radius: 14px;
+  font-size: 1rem;
+  color: var(--text-strong);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#atlas:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(63, 131, 248, 0.2);
+}
+
+#atlasBtn {
+  padding: 0.75rem 1.35rem;
+  border: none;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+#atlasBtn:hover,
+#atlasBtn:focus-visible {
+  background: var(--accent-strong);
+}
+
+#atlasBtn:active {
+  transform: translateY(1px);
+}
+
+.gate-message {
+  min-height: 1.5rem;
+  margin: 0;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.gate-message--success {
+  color: #0f7a4d;
+}
+
+.gate-message--error {
+  color: var(--danger);
+}
+
+.gate--open {
+  border: 2px solid rgba(63, 131, 248, 0.35);
+}
+
+.chest {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.chest--locked {
+  display: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chest--unlocked {
+  display: grid;
+  opacity: 1;
+}
+
 @media (min-width: 768px) {
   body {
     display: grid;
@@ -122,5 +221,9 @@ body {
 
   .view-icon {
     margin: 0 auto;
+  }
+
+  .gate-form__controls {
+    grid-template-columns: 1fr auto;
   }
 }
