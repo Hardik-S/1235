@@ -85,48 +85,31 @@
     <section id="viewClue" class="view" data-view="clue" hidden>
       <section id="sigilBoard" class="view-card sigil-board" aria-labelledby="sigilBoardHeading">
         <div class="view-icon" aria-hidden="true">🧩</div>
-        <div class="view-content">
+        <div class="view-content sigil-board__content">
           <h2 id="sigilBoardHeading" tabindex="-1">Sigil Alignment</h2>
-          <p class="sigil-board__intro">
-            Gather the scattered words, arrange them upon the staging grid, and align the six true sigils in
-            order. When the pattern is perfect, the gate's magic will surge.
-          </p>
-          <div class="sigil-board__sections" role="group" aria-label="Sigil alignment sections">
-            <div class="sigil-screen sigil-screen--source">
-              <section class="sigil-zone sigil-zone--source" aria-labelledby="sigilSourceHeading">
-                <header class="sigil-zone__header">
-                  <h3 id="sigilSourceHeading">Section 1: Word Cache</h3>
-                  <p>Shuffled on each visit. Select a sigil to send it to the staging grid.</p>
-                </header>
-                <div class="sigil-zone__body">
-                  <ul id="sigilSource" class="sigil-list" aria-live="polite" aria-label="Available words"></ul>
-                </div>
-              </section>
-            </div>
-            <div class="sigil-gap" aria-hidden="true"></div>
-            <div class="sigil-screen sigil-screen--staging">
-              <section class="sigil-zone sigil-zone--staging" aria-labelledby="sigilStagingHeading">
-                <header class="sigil-zone__header">
-                  <h3 id="sigilStagingHeading">Section 2: Staging Grid</h3>
-                  <p>Three columns and two rows. Use the controls on each tile to advance or retreat.</p>
-                </header>
-                <div class="sigil-zone__body">
-                  <div id="sigilStaging" class="staging-grid" role="grid" aria-label="Staging grid"></div>
-                </div>
-              </section>
-            </div>
-            <div class="sigil-gap" aria-hidden="true"></div>
-            <div class="sigil-screen sigil-screen--final">
-              <section class="sigil-zone sigil-zone--final" aria-labelledby="sigilFinalHeading">
-                <header class="sigil-zone__header">
-                  <h3 id="sigilFinalHeading">Section 3: Alignment Columns</h3>
-                  <p>Fill each column with the destined word. Tiles rotate to face the barrier.</p>
-                </header>
-                <div class="sigil-zone__body">
-                  <div id="sigilFinal" class="final-columns" role="group" aria-label="Alignment columns"></div>
-                </div>
-              </section>
-            </div>
+          <p class="sigil-board__intro">Select the six true sigils in the correct order to awaken the gate.</p>
+          <div class="sigil-board__layout" role="group" aria-label="Sigil alignment workspace">
+            <section class="sigil-panel sigil-panel--cache" aria-labelledby="sigilCacheHeading">
+              <header class="sigil-panel__header">
+                <h3 id="sigilCacheHeading">Word Cache</h3>
+                <p>Tap a word to send it to the solution below.</p>
+              </header>
+              <ul id="sigilCache" class="sigil-cache" aria-live="polite" aria-label="Available words"></ul>
+            </section>
+            <section class="sigil-panel sigil-panel--solution" aria-labelledby="sigilSolutionHeading">
+              <header class="sigil-panel__header">
+                <h3 id="sigilSolutionHeading">Ordered Solution</h3>
+                <p>Fill each slot from left to right. Tap a filled slot to clear it.</p>
+              </header>
+              <ol
+                id="sigilSolution"
+                class="sigil-solution"
+                aria-label="Chosen sigils"
+                aria-live="polite"
+                aria-atomic="true"
+              ></ol>
+              <p id="sigilStatus" class="sigil-status" role="status" aria-live="polite" aria-atomic="true"></p>
+            </section>
           </div>
         </div>
       </section>

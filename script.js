@@ -1,4 +1,4 @@
-import { SigilBoardHelper, normalizeWord, TARGET_SEQUENCE } from './lock-helper.js';
+import { ALL_WORDS, normalizeWord, TARGET_SEQUENCE } from './lock-helper.js';
 
 const KEY_PHRASE = 'atlas';
 const STORAGE_KEY = 'atlasOK';
@@ -21,10 +21,10 @@ const TREASURE_INVALID_MESSAGE =
 const TREASURE_FAILURE_MESSAGE = 'The vault rejects the sequence. Recalibrate and try once more.';
 const TREASURE_SUCCESS_MESSAGE = 'The vault unlatches! Riches spill forth.';
 const TREASURE_STORED_SUCCESS_MESSAGE = 'The chest stands open, its treasures gleaming.';
+const TARGET_NORMALIZED = TARGET_SEQUENCE.map((word) => normalizeWord(word));
 
 let gateUnlocked = false;
 let sigilComplete = false;
-let sigilHelper = null;
 let successTimer = null;
 let chestUnlocked = false;
 
@@ -72,6 +72,15 @@ function computeSigilValue(word) {
   return total;
 }
 
+function shuffleArray(values) {
+  const array = [...values];
+  for (let index = array.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [array[index], array[swapIndex]] = [array[swapIndex], array[index]];
+  }
+  return array;
+}
+
 function updateTreasureMessage(element, message, variant) {
   if (!element) return;
   element.textContent = message;
@@ -103,14 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const mapViewHeading = document.getElementById('mapViewHeading');
   const sigilHeading = document.getElementById('sigilBoardHeading');
   const rewardHeading = document.getElementById('reward-heading');
-  const sigilScreens = {
-    source: sigilBoardSection?.querySelector('.sigil-screen--source') ?? null,
-    staging: sigilBoardSection?.querySelector('.sigil-screen--staging') ?? null,
-    final: sigilBoardSection?.querySelector('.sigil-screen--final') ?? null,
-  };
-  const sigilSource = sigilScreens.source?.querySelector('#sigilSource') ?? null;
-  const sigilStaging = sigilScreens.staging?.querySelector('#sigilStaging') ?? null;
-  const sigilFinal = sigilScreens.final?.querySelector('#sigilFinal') ?? null;
+  const sigilCache = document.getElementById('sigilCache');
+  const sigilSolution = document.getElementById('sigilSolution');
+  const sigilStatus = document.getElementById('sigilStatus');
   const successOverlay = document.getElementById('sigilSuccess');
   const resetBtn = document.getElementById('resetBtn');
   const rewardSection = document.getElementById('reward');
@@ -545,182 +549,206 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const stagingCells = [];
-  const finalColumns = [];
+  const solution = new Array(TARGET_SEQUENCE.length).fill(null);
+  let wordPool = [];
+  const usedWordIds = new Set();
+  const solutionSlots = [];
 
-  if (sigilStaging) {
-    sigilStaging.textContent = '';
-    for (let index = 0; index < TARGET_SEQUENCE.length; index += 1) {
-      const cell = document.createElement('div');
-      cell.className = 'staging-cell';
-      cell.dataset.index = String(index);
-      cell.setAttribute('role', 'gridcell');
-      cell.setAttribute('aria-label', `Staging slot ${index + 1}`);
-      stagingCells.push(cell);
-      sigilStaging.appendChild(cell);
+  const defaultStatusMessage = 'Choose six words to align the sigil.';
+  const fullStatusMessage = 'All six sigils are placed. Remove one to make space.';
+  const incorrectStatusMessage = 'The pattern falters. Adjust the order.';
+  const successStatusMessage = 'Sigils aligned! Proceed to the vault.';
+
+  const setStatus = (message = '', variant = 'default') => {
+    if (!sigilStatus) {
+      return;
     }
+    sigilStatus.textContent = message;
+    sigilStatus.classList.remove('sigil-status--success', 'sigil-status--error');
+    if (variant === 'success') {
+      sigilStatus.classList.add('sigil-status--success');
+    } else if (variant === 'error') {
+      sigilStatus.classList.add('sigil-status--error');
+    }
+  };
+
+  const buildSolutionSlots = () => {
+    if (!sigilSolution) {
+      return;
+    }
+    sigilSolution.textContent = '';
+    solutionSlots.length = 0;
+    for (let index = 0; index < TARGET_SEQUENCE.length; index += 1) {
+      const slot = document.createElement('li');
+      slot.className = 'sigil-solution__slot';
+      slot.dataset.index = String(index + 1);
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'sigil-solution__button';
+      button.textContent = `Slot ${index + 1}`;
+      button.disabled = true;
+      button.setAttribute('aria-label', `Slot ${index + 1} empty`);
+      button.addEventListener('click', () => {
+        if (sigilComplete) {
+          return;
+        }
+        clearSlot(index);
+      });
+
+      slot.appendChild(button);
+      sigilSolution.appendChild(slot);
+      solutionSlots.push({ slot, button });
+    }
+  };
+
+  const renderCache = () => {
+    if (!sigilCache) {
+      return;
+    }
+    sigilCache.textContent = '';
+    wordPool.forEach((entry) => {
+      const item = document.createElement('li');
+      item.className = 'sigil-cache__item';
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'sigil-cache__button';
+      button.textContent = entry.word;
+      const used = usedWordIds.has(entry.id);
+      button.disabled = sigilComplete || used;
+      button.setAttribute('aria-pressed', used ? 'true' : 'false');
+      button.setAttribute(
+        'aria-label',
+        used ? `${entry.word} already placed` : `Send ${entry.word} to the solution`,
+      );
+      button.title = used || sigilComplete ? '' : 'Send to the solution';
+      if (!used && !sigilComplete) {
+        button.addEventListener('click', () => {
+          fillSlot(entry);
+        });
+      }
+
+      item.appendChild(button);
+      sigilCache.appendChild(item);
+    });
+  };
+
+  const renderSolution = ({ highlightMatches = false, highlightIncorrect = false } = {}) => {
+    if (solutionSlots.length === 0) {
+      return;
+    }
+    solutionSlots.forEach(({ slot, button }, index) => {
+      const entry = solution[index];
+      slot.classList.remove(
+        'sigil-solution__slot--filled',
+        'sigil-solution__slot--correct',
+        'sigil-solution__slot--incorrect',
+      );
+      if (entry) {
+        slot.classList.add('sigil-solution__slot--filled');
+        const isCorrect = entry.normalized === TARGET_NORMALIZED[index];
+        if (sigilComplete || (highlightMatches && isCorrect)) {
+          slot.classList.add('sigil-solution__slot--correct');
+        } else if (highlightIncorrect && !isCorrect) {
+          slot.classList.add('sigil-solution__slot--incorrect');
+        }
+        button.disabled = sigilComplete;
+        button.textContent = entry.word;
+        button.setAttribute('aria-label', `Remove ${entry.word} from position ${index + 1}`);
+        button.title = sigilComplete ? '' : 'Tap to remove this word';
+      } else {
+        button.disabled = true;
+        button.textContent = `Slot ${index + 1}`;
+        button.setAttribute('aria-label', `Slot ${index + 1} empty`);
+        button.title = '';
+      }
+    });
+  };
+
+  const syncPuzzleState = ({ highlightIncorrect = false } = {}) => {
+    if (!sigilCache || !sigilSolution) {
+      return;
+    }
+    renderCache();
+    const filledCount = solution.reduce((count, entry) => (entry ? count + 1 : count), 0);
+    const allFilled = filledCount === TARGET_SEQUENCE.length;
+    const matches =
+      allFilled && solution.every((entry, index) => entry?.normalized === TARGET_NORMALIZED[index]);
+    const highlightMatches = sigilComplete || allFilled;
+    renderSolution({ highlightMatches, highlightIncorrect: highlightIncorrect || (allFilled && !matches) });
+
+    if (sigilComplete) {
+      setStatus(successStatusMessage, 'success');
+      return;
+    }
+    if (matches) {
+      handleSigilSuccess();
+      return;
+    }
+    if (allFilled) {
+      setStatus(incorrectStatusMessage, 'error');
+      return;
+    }
+    if (filledCount === 0) {
+      setStatus(defaultStatusMessage);
+      return;
+    }
+    const remaining = TARGET_SEQUENCE.length - filledCount;
+    setStatus(`Place ${remaining} more ${remaining === 1 ? 'word' : 'words'} to complete the pattern.`);
+  };
+
+  function clearSlot(index) {
+    const entry = solution[index];
+    if (!entry) {
+      return;
+    }
+    solution[index] = null;
+    usedWordIds.delete(entry.id);
+    syncPuzzleState();
   }
 
-  if (sigilFinal) {
-    sigilFinal.textContent = '';
-    for (let index = 0; index < TARGET_SEQUENCE.length; index += 1) {
-      const column = document.createElement('div');
-      column.className = 'final-column';
-      column.dataset.index = String(index);
-      column.dataset.label = `Column ${index + 1}`;
-      column.setAttribute('aria-label', `Alignment column ${index + 1}`);
-      finalColumns.push(column);
-      sigilFinal.appendChild(column);
+  function fillSlot(entry) {
+    const emptyIndex = solution.findIndex((value) => value == null);
+    if (emptyIndex === -1) {
+      setStatus(fullStatusMessage, 'error');
+      renderSolution({ highlightMatches: true, highlightIncorrect: true });
+      return;
     }
+    solution[emptyIndex] = entry;
+    usedWordIds.add(entry.id);
+    syncPuzzleState();
   }
 
-  const buildSourceTile = (tile) => {
-    const item = document.createElement('li');
-    item.className = 'word-tile';
-    item.dataset.location = 'source';
-
-    const label = document.createElement('p');
-    label.className = 'word-tile__label';
-    label.textContent = tile.word;
-
-    const controls = document.createElement('div');
-    controls.className = 'word-tile__controls';
-
-    const addBtn = document.createElement('button');
-    addBtn.type = 'button';
-    addBtn.className = 'word-tile__button';
-    addBtn.textContent = '+';
-    addBtn.setAttribute('aria-label', `Send ${tile.word} to the staging grid`);
-    addBtn.addEventListener('click', () => {
-      if (sigilHelper) {
-        sigilHelper.placeTileInStaging(tile.id);
-      }
-    });
-
-    controls.appendChild(addBtn);
-    item.append(label, controls);
-    return item;
-  };
-
-  const buildStagingTile = (tile, index) => {
-    const container = document.createElement('div');
-    container.className = 'word-tile';
-    container.dataset.location = 'staging';
-
-    const label = document.createElement('p');
-    label.className = 'word-tile__label';
-    label.textContent = tile.word;
-
-    const advanceControls = document.createElement('div');
-    advanceControls.className = 'word-tile__controls';
-
-    const advanceBtn = document.createElement('button');
-    advanceBtn.type = 'button';
-    advanceBtn.className = 'word-tile__button word-tile__button--secondary';
-    advanceBtn.textContent = '+';
-    advanceBtn.setAttribute('aria-label', `Move ${tile.word} to alignment column ${index + 1}`);
-    advanceBtn.addEventListener('click', () => {
-      if (sigilHelper) {
-        sigilHelper.promoteStagingTile(index);
-      }
-    });
-
-    const returnControls = document.createElement('div');
-    returnControls.className = 'word-tile__controls word-tile__controls--bottom';
-
-    const returnBtn = document.createElement('button');
-    returnBtn.type = 'button';
-    returnBtn.className = 'word-tile__button word-tile__button--danger';
-    returnBtn.textContent = '−';
-    returnBtn.setAttribute('aria-label', `Return ${tile.word} to the word cache`);
-    returnBtn.addEventListener('click', () => {
-      if (sigilHelper) {
-        sigilHelper.moveTileToSource(tile.id);
-      }
-    });
-
-    advanceControls.appendChild(advanceBtn);
-    returnControls.appendChild(returnBtn);
-    container.append(label, advanceControls, returnControls);
-    return container;
-  };
-
-  const buildFinalTile = (tile, index) => {
-    const container = document.createElement('div');
-    container.className = 'word-tile word-tile--final';
-    container.dataset.location = 'final';
-
-    const label = document.createElement('p');
-    label.className = 'word-tile__label';
-    label.textContent = tile.word;
-
-    const returnControls = document.createElement('div');
-    returnControls.className = 'word-tile__controls word-tile__controls--bottom';
-
-    const returnBtn = document.createElement('button');
-    returnBtn.type = 'button';
-    returnBtn.className = 'word-tile__button word-tile__button--danger';
-    returnBtn.textContent = '−';
-    returnBtn.setAttribute('aria-label', `Send ${tile.word} back to staging column ${index + 1}`);
-    returnBtn.addEventListener('click', () => {
-      if (sigilHelper) {
-        sigilHelper.returnFinalToStaging(index);
-      }
-    });
-
-    returnControls.appendChild(returnBtn);
-    container.append(label, returnControls);
-    return container;
-  };
-
-  const renderSigilState = (state) => {
-    if (sigilScreens.source) {
-      sigilScreens.source.classList.toggle('sigil-screen--has-tiles', state.source.length > 0);
-    }
-    if (sigilScreens.staging) {
-      const hasStaging = state.staging.some((tile) => tile != null);
-      sigilScreens.staging.classList.toggle('sigil-screen--has-tiles', hasStaging);
-    }
-    if (sigilScreens.final) {
-      const hasFinal = state.final.some((tile) => tile != null);
-      sigilScreens.final.classList.toggle('sigil-screen--has-tiles', hasFinal);
-    }
-
-    if (sigilSource) {
-      sigilSource.textContent = '';
-      state.source.forEach((tile) => {
-        sigilSource.appendChild(buildSourceTile(tile));
+  const initializePuzzle = () => {
+    wordPool = shuffleArray(ALL_WORDS).map((word, index) => ({
+      id: `word-${index}`,
+      word,
+      normalized: normalizeWord(word),
+    }));
+    solution.fill(null);
+    usedWordIds.clear();
+    buildSolutionSlots();
+    if (sigilComplete) {
+      TARGET_NORMALIZED.forEach((normalizedWord, index) => {
+        const entry = wordPool.find((candidate) => candidate.normalized === normalizedWord);
+        if (entry) {
+          solution[index] = entry;
+          usedWordIds.add(entry.id);
+        }
       });
     }
-
-    state.staging.forEach((tile, index) => {
-      const cell = stagingCells[index];
-      if (!cell) return;
-      cell.textContent = '';
-      cell.classList.toggle('staging-cell--active', Boolean(tile));
-      if (tile) {
-        cell.appendChild(buildStagingTile(tile, index));
-      }
-    });
-
-    state.final.forEach((tile, index) => {
-      const column = finalColumns[index];
-      if (!column) return;
-      column.textContent = '';
-      column.classList.toggle('final-column--active', Boolean(tile));
-      if (tile) {
-        column.appendChild(buildFinalTile(tile, index));
-      }
-    });
+    syncPuzzleState();
+    if (!sigilComplete) {
+      setStatus(defaultStatusMessage);
+    }
   };
 
-  sigilHelper = new SigilBoardHelper();
-  sigilHelper.addEventListener('statechange', (event) => {
-    renderSigilState(event.detail);
-  });
-
-  sigilHelper.addEventListener('success', () => {
+  function handleSigilSuccess() {
     if (sigilComplete) {
+      setStatus(successStatusMessage, 'success');
+      renderCache();
+      renderSolution({ highlightMatches: true });
       return;
     }
     sigilComplete = true;
@@ -731,6 +759,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     updateRewardState(rewardSection, true);
     updateNavButtons();
+    renderCache();
+    renderSolution({ highlightMatches: true });
+    setStatus(successStatusMessage, 'success');
     if (successOverlay) {
       successOverlay.hidden = false;
       successOverlay.classList.remove('sigil-success--visible');
@@ -747,13 +778,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => focusElement(rewardHeading), 160);
       }
     }, SUCCESS_OVERLAY_DELAY);
-  });
-
-  if (sigilComplete) {
-    sigilHelper.completeImmediately();
-  } else {
-    renderSigilState(sigilHelper.getState());
   }
+
+  initializePuzzle();
 
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
@@ -765,7 +792,12 @@ document.addEventListener('DOMContentLoaded', () => {
       chestUnlocked = false;
       setGateState(sections, false);
       updateRewardState(rewardSection, false);
-      sigilHelper.reset();
+      window.clearTimeout(successTimer);
+      if (successOverlay) {
+        successOverlay.hidden = true;
+        successOverlay.classList.remove('sigil-success--visible');
+      }
+      initializePuzzle();
       applyTreasureState(false, { preserveValues: false, store: false, updateMessage: false });
       if (treasureMessage) {
         updateTreasureMessage(treasureMessage, TREASURE_DEFAULT_MESSAGE);
