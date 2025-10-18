@@ -85,19 +85,64 @@ body {
   line-height: 1.6;
 }
 
-.placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 4rem;
-  padding: 0.75rem;
-  border: 2px dashed rgba(63, 131, 248, 0.4);
-  border-radius: calc(var(--border-radius) - 6px);
-  background: rgba(63, 131, 248, 0.05);
-  color: var(--accent);
+.gate-form-container {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.gate-form-container[hidden] {
+  display: none;
+}
+
+.gate-map {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.gate-map[hidden] {
+  display: none;
+}
+
+.gate-map__heading {
+  margin: 0;
+  font-size: 1.15rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  color: var(--text-strong);
+}
+
+.gate-map__intro,
+.gate-map__note {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.gate-map__frame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: calc(var(--border-radius) - 8px);
+  box-shadow: 0 12px 28px rgba(63, 131, 248, 0.18);
+  background: #000;
+}
+
+.gate-map__frame::before {
+  content: '';
+  display: block;
+  padding-top: min(62.5%, 360px);
+}
+
+.gate-map__frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.gate-map__note {
+  font-weight: 500;
 }
 
 .reward {

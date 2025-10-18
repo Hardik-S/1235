@@ -36,13 +36,19 @@
     }
   }
 
-  function setGateState({ gate, chest }, isOpen) {
+  function setGateState({ gate, chest, gateForm, map }, isOpen) {
     if (!gate || !chest) {
       return;
     }
 
     gate.classList.toggle('gate--open', isOpen);
     gate.classList.toggle('gate--closed', !isOpen);
+    if (gateForm) {
+      gateForm.hidden = isOpen;
+    }
+    if (map) {
+      map.hidden = !isOpen;
+    }
     chest.classList.toggle('chest--locked', !isOpen);
     chest.classList.toggle('chest--unlocked', isOpen);
   }
@@ -70,7 +76,7 @@
     return Math.min(Math.max(value, min), max);
   }
 
-  function focusChestHeading(heading) {
+  function focusMapHeading(heading) {
     if (!heading) return;
     heading.focus({ preventScroll: false });
   }
@@ -82,7 +88,9 @@
     const gateSection = document.getElementById('gate');
     const chestSection = document.getElementById('chest');
     const rewardSection = document.getElementById('reward');
-    const chestHeading = document.getElementById('chest-heading');
+    const gateMap = document.getElementById('gateMap');
+    const gateMapHeading = document.getElementById('gateMapHeading');
+    const gateFormContainer = document.getElementById('gateFormContainer');
     const atlasForm = document.getElementById('atlasForm');
     const lockGrid = document.getElementById('lockGrid');
     const lockProgress = document.getElementById('lockProgress');
@@ -96,13 +104,13 @@
       return;
     }
 
-    const sections = { gate: gateSection, chest: chestSection };
+    const sections = { gate: gateSection, chest: chestSection, gateForm: gateFormContainer, map: gateMap };
 
     const storedUnlock = window.localStorage.getItem(STORAGE_KEY) === 'true';
     setGateState(sections, storedUnlock);
     if (storedUnlock) {
       updateGateMessage(gateMsg, STORED_SUCCESS_MESSAGE, 'success');
-      setTimeout(() => focusChestHeading(chestHeading), 120);
+      setTimeout(() => focusMapHeading(gateMapHeading), 120);
     } else {
       updateGateMessage(gateMsg, PROMPT_MESSAGE);
       atlasInput.focus({ preventScroll: true });
@@ -125,7 +133,7 @@
         setGateState(sections, true);
         updateGateMessage(gateMsg, SUCCESS_MESSAGE, 'success');
         atlasInput.value = '';
-        setTimeout(() => focusChestHeading(chestHeading), 140);
+        setTimeout(() => focusMapHeading(gateMapHeading), 160);
       } else {
         window.localStorage.removeItem(STORAGE_KEY);
         setGateState(sections, false);
