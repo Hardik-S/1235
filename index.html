@@ -92,27 +92,41 @@
             order. When the pattern is perfect, the gate's magic will surge.
           </p>
           <div class="sigil-board__sections" role="group" aria-label="Sigil alignment sections">
-            <section class="sigil-zone sigil-zone--source" aria-labelledby="sigilSourceHeading">
-              <header class="sigil-zone__header">
-                <h3 id="sigilSourceHeading">Section 1: Word Cache</h3>
-                <p>Shuffled on each visit. Select a sigil to send it to the staging grid.</p>
-              </header>
-              <ul id="sigilSource" class="sigil-list" aria-live="polite" aria-label="Available words"></ul>
-            </section>
-            <section class="sigil-zone sigil-zone--staging" aria-labelledby="sigilStagingHeading">
-              <header class="sigil-zone__header">
-                <h3 id="sigilStagingHeading">Section 2: Staging Grid</h3>
-                <p>Three columns and two rows. Use the controls on each tile to advance or retreat.</p>
-              </header>
-              <div id="sigilStaging" class="staging-grid" role="grid" aria-label="Staging grid"></div>
-            </section>
-            <section class="sigil-zone sigil-zone--final" aria-labelledby="sigilFinalHeading">
-              <header class="sigil-zone__header">
-                <h3 id="sigilFinalHeading">Section 3: Alignment Columns</h3>
-                <p>Fill each column with the destined word. Tiles rotate to face the barrier.</p>
-              </header>
-              <div id="sigilFinal" class="final-columns" role="group" aria-label="Alignment columns"></div>
-            </section>
+            <div class="sigil-screen sigil-screen--source">
+              <section class="sigil-zone sigil-zone--source" aria-labelledby="sigilSourceHeading">
+                <header class="sigil-zone__header">
+                  <h3 id="sigilSourceHeading">Section 1: Word Cache</h3>
+                  <p>Shuffled on each visit. Select a sigil to send it to the staging grid.</p>
+                </header>
+                <div class="sigil-zone__body">
+                  <ul id="sigilSource" class="sigil-list" aria-live="polite" aria-label="Available words"></ul>
+                </div>
+              </section>
+            </div>
+            <div class="sigil-gap" aria-hidden="true"></div>
+            <div class="sigil-screen sigil-screen--staging">
+              <section class="sigil-zone sigil-zone--staging" aria-labelledby="sigilStagingHeading">
+                <header class="sigil-zone__header">
+                  <h3 id="sigilStagingHeading">Section 2: Staging Grid</h3>
+                  <p>Three columns and two rows. Use the controls on each tile to advance or retreat.</p>
+                </header>
+                <div class="sigil-zone__body">
+                  <div id="sigilStaging" class="staging-grid" role="grid" aria-label="Staging grid"></div>
+                </div>
+              </section>
+            </div>
+            <div class="sigil-gap" aria-hidden="true"></div>
+            <div class="sigil-screen sigil-screen--final">
+              <section class="sigil-zone sigil-zone--final" aria-labelledby="sigilFinalHeading">
+                <header class="sigil-zone__header">
+                  <h3 id="sigilFinalHeading">Section 3: Alignment Columns</h3>
+                  <p>Fill each column with the destined word. Tiles rotate to face the barrier.</p>
+                </header>
+                <div class="sigil-zone__body">
+                  <div id="sigilFinal" class="final-columns" role="group" aria-label="Alignment columns"></div>
+                </div>
+              </section>
+            </div>
           </div>
         </div>
       </section>
