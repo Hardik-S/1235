@@ -5,22 +5,22 @@ const STORAGE_KEY = 'atlasOK';
 const SIGIL_STORAGE_KEY = 'atlasSigilComplete';
 const VIEW_STORAGE_KEY = 'atlasActiveView';
 const VIEW_ORDER = ['landing', 'map', 'clue', 'reward'];
-const PROMPT_MESSAGE = 'Speak the key phrase to pass through the gate.';
-const SUCCESS_MESSAGE = 'The gatekeeper bows as the gate swings open.';
-const FAILURE_MESSAGE = 'The sentry remains unmoved. Whisper the correct key phrase.';
-const EMPTY_MESSAGE = 'Offer a phrase before seeking passage.';
-const STORED_SUCCESS_MESSAGE = 'The gate already stands open for you.';
+const PROMPT_MESSAGE = 'Offer the moonlit password to guide Ananya into her half-birthday adventure.';
+const SUCCESS_MESSAGE = 'The moon gate shimmers open for Ananya.';
+const FAILURE_MESSAGE = 'The gate glows dim. Share the true moonlit password.';
+const EMPTY_MESSAGE = 'A hush falls over the gate. Whisper the password first.';
+const STORED_SUCCESS_MESSAGE = 'The moon gate already stands open for this celebration.';
 const SUCCESS_OVERLAY_DELAY = 1400;
 const TREASURE_STORAGE_KEY = 'atlasTreasureOpen';
 const TREASURE_DEFAULT_MESSAGE =
-  'Reference the ledger and enter each resonance value to unseal the vault.';
+  'Trace the star chart ledger and enter each celebration value to coax the cache awake.';
 const TREASURE_INCOMPLETE_MESSAGE =
-  'Complete all six resonance values before attempting to open the chest.';
+  'Every celebration moment needs a value before the cache will respond.';
 const TREASURE_INVALID_MESSAGE =
-  'Resonance values must be numeric. Adjust the ledger entry and try again.';
-const TREASURE_FAILURE_MESSAGE = 'The vault rejects the sequence. Recalibrate and try once more.';
-const TREASURE_SUCCESS_MESSAGE = 'The vault unlatches! Riches spill forth.';
-const TREASURE_STORED_SUCCESS_MESSAGE = 'The chest stands open, its treasures gleaming.';
+  'Celebration values must be numbers drawn from the star chart.';
+const TREASURE_FAILURE_MESSAGE = 'The cache hums uncertainly. Adjust the celebration sequence and try again.';
+const TREASURE_SUCCESS_MESSAGE = 'Starlight flares as the celebration cache unlocks!';
+const TREASURE_STORED_SUCCESS_MESSAGE = 'The celebration cache remains open, treasures aglow.';
 const TARGET_NORMALIZED = TARGET_SEQUENCE.map((word) => normalizeWord(word));
 
 let gateUnlocked = false;
@@ -554,10 +554,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const usedWordIds = new Set();
   const solutionSlots = [];
 
-  const defaultStatusMessage = 'Choose six words to align the sigil.';
-  const fullStatusMessage = 'All six sigils are placed. Remove one to make space.';
-  const incorrectStatusMessage = 'The pattern falters. Adjust the order.';
-  const successStatusMessage = 'Sigils aligned! Proceed to the vault.';
+  const defaultStatusMessage = 'Collect six clues to choreograph the celebration sequence.';
+  const fullStatusMessage = 'All six celebration moments are placed. Remove one to reshape the sequence.';
+  const incorrectStatusMessage = 'The celebration stumbles. Rearrange the clues.';
+  const successStatusMessage = 'Celebration sequence complete! The half-birthday cache awaits.';
 
   const setStatus = (message = '', variant = 'default') => {
     if (!sigilStatus) {
@@ -586,9 +586,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'sigil-solution__button';
-      button.textContent = `Slot ${index + 1}`;
+      button.textContent = `Sequence slot ${index + 1}`;
       button.disabled = true;
-      button.setAttribute('aria-label', `Slot ${index + 1} empty`);
+      button.setAttribute('aria-label', `Celebration slot ${index + 1} empty`);
       button.addEventListener('click', () => {
         if (sigilComplete) {
           return;
@@ -620,9 +620,9 @@ document.addEventListener('DOMContentLoaded', () => {
       button.setAttribute('aria-pressed', used ? 'true' : 'false');
       button.setAttribute(
         'aria-label',
-        used ? `${entry.word} already placed` : `Send ${entry.word} to the solution`,
+        used ? `${entry.word} already placed` : `Send ${entry.word} into the celebration sequence`,
       );
-      button.title = used || sigilComplete ? '' : 'Send to the solution';
+      button.title = used || sigilComplete ? '' : 'Send to the celebration sequence';
       if (!used && !sigilComplete) {
         button.addEventListener('click', () => {
           fillSlot(entry);
@@ -655,12 +655,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         button.disabled = sigilComplete;
         button.textContent = entry.word;
-        button.setAttribute('aria-label', `Remove ${entry.word} from position ${index + 1}`);
-        button.title = sigilComplete ? '' : 'Tap to remove this word';
+        button.setAttribute('aria-label', `Remove ${entry.word} from celebration slot ${index + 1}`);
+        button.title = sigilComplete ? '' : 'Tap to release this clue';
       } else {
         button.disabled = true;
-        button.textContent = `Slot ${index + 1}`;
-        button.setAttribute('aria-label', `Slot ${index + 1} empty`);
+        button.textContent = `Sequence slot ${index + 1}`;
+        button.setAttribute('aria-label', `Celebration slot ${index + 1} empty`);
         button.title = '';
       }
     });
@@ -695,7 +695,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     const remaining = TARGET_SEQUENCE.length - filledCount;
-    setStatus(`Place ${remaining} more ${remaining === 1 ? 'word' : 'words'} to complete the pattern.`);
+    setStatus(
+      `Place ${remaining} more ${remaining === 1 ? 'clue' : 'clues'} to complete the celebration.`,
+    );
   };
 
   function clearSlot(index) {
