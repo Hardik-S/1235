@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sigilBoardSection = document.getElementById('sigilBoard');
   const gateFormContainer = document.getElementById('gateFormContainer');
   const atlasForm = document.getElementById('atlasForm');
+  const topNav = document.querySelector('.top-nav');
   const navBack = document.getElementById('navBack');
   const navForward = document.getElementById('navForward');
   const mapViewHeading = document.getElementById('mapViewHeading');
@@ -82,6 +83,42 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const sections = { gate: gateSection, board: sigilBoardSection, gateForm: gateFormContainer };
+
+  if (topNav) {
+    let lastKnownScrollY = window.scrollY || window.pageYOffset || 0;
+    let navTicking = false;
+
+    const syncNavVisibility = () => {
+      if (lastKnownScrollY > 0) {
+        topNav.classList.add('top-nav--hidden');
+      } else {
+        topNav.classList.remove('top-nav--hidden');
+      }
+      navTicking = false;
+    };
+
+    const requestNavUpdate = () => {
+      if (!navTicking) {
+        navTicking = true;
+        window.requestAnimationFrame(syncNavVisibility);
+      }
+    };
+
+    window.addEventListener(
+      'scroll',
+      () => {
+        lastKnownScrollY = window.scrollY || window.pageYOffset || 0;
+        requestNavUpdate();
+      },
+      { passive: true },
+    );
+
+    topNav.addEventListener('focusin', () => {
+      topNav.classList.remove('top-nav--hidden');
+    });
+
+    syncNavVisibility();
+  }
 
   const storedUnlock = window.localStorage.getItem(STORAGE_KEY) === 'true';
   setGateState(sections, storedUnlock);
