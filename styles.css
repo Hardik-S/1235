@@ -456,78 +456,87 @@ body {
   color: var(--text-muted);
 }
 
-.lock-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.75rem;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.lock-tile {
-  display: grid;
-  gap: 0.35rem;
-  align-items: center;
-  justify-items: center;
-  padding: 0.9rem 0.75rem;
-  border: 2px solid rgba(82, 96, 109, 0.2);
-  border-radius: 16px;
-  background: var(--surface-muted);
-  text-align: center;
-  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
-}
-
-.lock-tile--active {
-  border-color: rgba(63, 131, 248, 0.55);
-  background: rgba(63, 131, 248, 0.1);
-}
-
-.lock-tile__icon {
-  font-size: 1.75rem;
-}
-
-.lock-tile__label {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.lock-tile.unlocked {
-  border-color: rgba(15, 122, 77, 0.6);
-  background: rgba(15, 122, 77, 0.12);
-  transform: translateY(-2px);
-}
-
-.lock-tile.unlocked .lock-tile__label {
-  color: #0f7a4d;
-}
-
 .lock-form {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
-.lock-form__controls {
+.lock-code {
   display: grid;
-  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px dashed rgba(82, 96, 109, 0.2);
+  border-radius: 16px;
+  background: rgba(116, 136, 153, 0.08);
+}
+
+.lock-code__legend {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.lock-code__hint {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.lock-code__inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
   gap: 0.75rem;
 }
 
-#lockInput {
+.lock-code__cell {
+  position: relative;
+}
+
+.lock-code__input {
   width: 100%;
-  padding: 0.75rem 0.9rem;
+  padding: 0.85rem 0.75rem;
   border: 2px solid rgba(82, 96, 109, 0.25);
   border-radius: 14px;
-  font-size: 1rem;
+  background: #fff;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   color: var(--text-strong);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 
-#lockInput:focus {
+.lock-code__input::placeholder {
+  color: rgba(82, 96, 109, 0.4);
+}
+
+.lock-code__input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(63, 131, 248, 0.2);
+  box-shadow: 0 0 0 4px rgba(63, 131, 248, 0.18);
+  transform: translateY(-1px);
+}
+
+.lock-code__input[disabled] {
+  background: rgba(116, 136, 153, 0.12);
+  color: rgba(31, 41, 51, 0.65);
+  cursor: not-allowed;
+}
+
+.lock-code__input--error {
+  border-color: rgba(214, 31, 105, 0.6);
+  box-shadow: 0 0 0 3px rgba(214, 31, 105, 0.15);
+}
+
+.lock-form--success .lock-code__input {
+  border-color: rgba(15, 122, 77, 0.55);
+  background: rgba(15, 122, 77, 0.12);
+}
+
+.lock-form--error .lock-code__input {
+  border-color: rgba(214, 31, 105, 0.45);
 }
 
 #lockBtn {
@@ -558,7 +567,7 @@ body {
 }
 
 .lock-message {
-  min-height: 1.25rem;
+  min-height: 1.5rem;
   margin: 0;
   font-weight: 600;
   font-size: 0.95rem;
@@ -611,5 +620,9 @@ body {
 
   .reward-card {
     text-align: left;
+  }
+
+  .lock-code__inputs {
+    grid-template-columns: repeat(6, minmax(90px, 1fr));
   }
 }
