@@ -139,7 +139,156 @@
           <h2 id="reward-heading" tabindex="-1">Reward Chamber</h2>
           <p>The chamber awaits your triumph. Claim the relic once the sigils align.</p>
           <div class="reward-card" role="status" aria-live="polite" aria-atomic="true">
-            <p class="reward-card__intro">The gatekeeper proclaims your victory. Take your spoils:</p>
+            <p class="reward-card__intro">The gatekeeper proclaims your victory. Decode the ledger to open the vault.</p>
+            <div class="treasure-challenge">
+              <section class="treasure-challenge__ledger" aria-labelledby="treasureLedgerHeading">
+                <h3 id="treasureLedgerHeading">Sigil Resonance Ledger</h3>
+                <p class="treasure-challenge__help">Ordered sigils with their computed resonance values.</p>
+                <ol id="rewardSequence" class="reward-sequence" aria-live="polite"></ol>
+              </section>
+              <section class="treasure-challenge__vault" aria-labelledby="treasureVaultHeading">
+                <h3 id="treasureVaultHeading">Vault Access Challenge</h3>
+                <p class="treasure-challenge__help">Enter the six resonance values in order to release the warded chest.</p>
+                <div id="treasureChest" class="treasure-chest" aria-hidden="true">
+                  <svg class="treasure-chest__art treasure-chest__art--closed" viewBox="0 0 240 180" role="img" aria-label="Closed treasure chest">
+                    <rect x="20" y="70" width="200" height="90" rx="18" fill="#8b5e3c" />
+                    <rect x="20" y="70" width="200" height="40" rx="18" fill="#9c6b45" />
+                    <rect x="34" y="84" width="172" height="62" rx="12" fill="#d4a574" />
+                    <rect x="95" y="96" width="50" height="36" rx="8" fill="#704225" />
+                    <rect x="105" y="96" width="30" height="36" rx="6" fill="#f4d06f" />
+                    <rect x="102" y="60" width="36" height="20" rx="6" fill="#f7e3a6" />
+                    <path d="M20 70h200l-12-40H32z" fill="#c68a53" />
+                    <path d="M32 30h176l10 30H22z" fill="#d99a63" />
+                    <path d="M20 70h200v12H20z" fill="#62381f" opacity="0.2" />
+                  </svg>
+                  <svg
+                    class="treasure-chest__art treasure-chest__art--open"
+                    viewBox="0 0 260 200"
+                    role="img"
+                    aria-label="Open treasure chest overflowing with gold coins, coupons, and snacks"
+                  >
+                    <defs>
+                      <linearGradient id="coinGradient" x1="0%" x2="0%" y1="0%" y2="100%">
+                        <stop offset="0%" stop-color="#ffe066" />
+                        <stop offset="100%" stop-color="#f4c10f" />
+                      </linearGradient>
+                      <linearGradient id="couponGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+                        <stop offset="0%" stop-color="#f8cdda" />
+                        <stop offset="100%" stop-color="#f9a8d4" />
+                      </linearGradient>
+                      <linearGradient id="snackGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+                        <stop offset="0%" stop-color="#f7b267" />
+                        <stop offset="100%" stop-color="#f79d65" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M34 76h192l-20-60H54z" fill="#d99a63" />
+                    <path d="M34 76h192v22H34z" fill="#62381f" opacity="0.25" />
+                    <rect x="32" y="88" width="196" height="90" rx="18" fill="#8b5e3c" />
+                    <rect x="48" y="110" width="164" height="64" rx="14" fill="#d4a574" />
+                    <rect x="110" y="120" width="40" height="46" rx="8" fill="#704225" />
+                    <rect x="118" y="120" width="24" height="46" rx="6" fill="#f4d06f" />
+                    <g class="treasure-chest__coins">
+                      <circle cx="80" cy="108" r="18" fill="url(#coinGradient)" />
+                      <circle cx="100" cy="92" r="20" fill="url(#coinGradient)" />
+                      <circle cx="140" cy="84" r="18" fill="url(#coinGradient)" />
+                      <circle cx="170" cy="96" r="16" fill="url(#coinGradient)" />
+                      <circle cx="190" cy="114" r="18" fill="url(#coinGradient)" />
+                    </g>
+                    <g class="treasure-chest__coupon">
+                      <rect x="72" y="68" width="84" height="32" rx="6" fill="url(#couponGradient)" />
+                      <path d="M84 78h20" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+                      <path d="M110 78h20" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+                      <circle cx="148" cy="84" r="6" fill="#fff" opacity="0.85" />
+                    </g>
+                    <g class="treasure-chest__snack">
+                      <path d="M156 64c12 0 28 10 36 22 6 10 2 20-10 20s-28-10-36-22c-6-10-2-20 10-20z" fill="url(#snackGradient)" />
+                      <circle cx="168" cy="76" r="4" fill="#fff6d5" />
+                      <circle cx="182" cy="82" r="4" fill="#fff6d5" />
+                    </g>
+                    <g class="treasure-chest__sparkles" fill="#fdf5c9">
+                      <path d="M54 62l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" />
+                      <path d="M214 72l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" />
+                      <path d="M132 48l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" />
+                    </g>
+                  </svg>
+                </div>
+                <form id="treasureForm" class="treasure-form" novalidate aria-describedby="treasureMessage">
+                  <fieldset class="treasure-form__fieldset">
+                    <legend class="treasure-form__legend">Enter resonance values</legend>
+                    <div class="treasure-form__inputs">
+                      <label class="sr-only" for="treasureInput0">Value for sigil 1</label>
+                      <input
+                        id="treasureInput0"
+                        class="treasure-input"
+                        name="treasureInput0"
+                        type="number"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        aria-label="Value for sigil 1"
+                        required
+                      />
+                      <label class="sr-only" for="treasureInput1">Value for sigil 2</label>
+                      <input
+                        id="treasureInput1"
+                        class="treasure-input"
+                        name="treasureInput1"
+                        type="number"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        aria-label="Value for sigil 2"
+                        required
+                      />
+                      <label class="sr-only" for="treasureInput2">Value for sigil 3</label>
+                      <input
+                        id="treasureInput2"
+                        class="treasure-input"
+                        name="treasureInput2"
+                        type="number"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        aria-label="Value for sigil 3"
+                        required
+                      />
+                      <label class="sr-only" for="treasureInput3">Value for sigil 4</label>
+                      <input
+                        id="treasureInput3"
+                        class="treasure-input"
+                        name="treasureInput3"
+                        type="number"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        aria-label="Value for sigil 4"
+                        required
+                      />
+                      <label class="sr-only" for="treasureInput4">Value for sigil 5</label>
+                      <input
+                        id="treasureInput4"
+                        class="treasure-input"
+                        name="treasureInput4"
+                        type="number"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        aria-label="Value for sigil 5"
+                        required
+                      />
+                      <label class="sr-only" for="treasureInput5">Value for sigil 6</label>
+                      <input
+                        id="treasureInput5"
+                        class="treasure-input"
+                        name="treasureInput5"
+                        type="number"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        aria-label="Value for sigil 6"
+                        required
+                      />
+                    </div>
+                  </fieldset>
+                  <button type="submit" class="treasure-form__submit">Unseal the Chest</button>
+                </form>
+                <p id="treasureMessage" class="treasure-message" role="status" aria-live="polite" aria-atomic="true"></p>
+              </section>
+            </div>
             <ul class="reward-list">
               <li class="reward-list__item">
                 <span class="reward-list__icon" aria-hidden="true">🌟</span>

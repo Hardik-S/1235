@@ -214,6 +214,239 @@ body {
   color: var(--text-strong);
 }
 
+.treasure-challenge {
+  display: grid;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+.treasure-challenge__ledger,
+.treasure-challenge__vault {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.treasure-challenge__help {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.reward-sequence {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.reward-sequence__item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: rgba(63, 131, 248, 0.12);
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+.reward-sequence__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(63, 131, 248, 0.22);
+  color: var(--accent-strong);
+  font-size: 0.95rem;
+}
+
+.reward-sequence__word {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.reward-sequence__value {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-strong);
+}
+
+.treasure-chest {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(320px, 100%);
+  margin: 0 auto;
+  padding: 0.75rem;
+  transition: transform 0.45s ease;
+}
+
+.treasure-chest--open {
+  transform: translateY(-6px);
+}
+
+.treasure-chest__art {
+  width: min(260px, 100%);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 14px 24px rgba(63, 131, 248, 0.18));
+}
+
+.treasure-chest__art--open {
+  display: none;
+  opacity: 0;
+}
+
+.treasure-chest--open .treasure-chest__art--closed {
+  display: none;
+}
+
+.treasure-chest--open .treasure-chest__art--open {
+  display: block;
+  animation: lootReveal 0.6s ease forwards;
+}
+
+.treasure-chest__sparkles path {
+  opacity: 0;
+}
+
+.treasure-chest--open .treasure-chest__sparkles path {
+  animation: sparklePulse 1.8s ease-in-out infinite;
+  animation-delay: calc(var(--sparkle-index, 0) * 0.4s);
+  opacity: 1;
+}
+
+.treasure-chest__sparkles path:nth-child(1) {
+  --sparkle-index: 0;
+}
+
+.treasure-chest__sparkles path:nth-child(2) {
+  --sparkle-index: 1;
+}
+
+.treasure-chest__sparkles path:nth-child(3) {
+  --sparkle-index: 2;
+}
+
+.treasure-chest__coins circle {
+  transform-origin: center;
+}
+
+.treasure-chest--open .treasure-chest__coins circle {
+  animation: coinBounce 1.6s ease-in-out infinite;
+}
+
+.treasure-chest--open .treasure-chest__coins circle:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.treasure-chest--open .treasure-chest__coins circle:nth-child(3) {
+  animation-delay: 0.45s;
+}
+
+.treasure-chest--open .treasure-chest__coins circle:nth-child(4) {
+  animation-delay: 0.65s;
+}
+
+.treasure-chest--open .treasure-chest__coins circle:nth-child(5) {
+  animation-delay: 0.85s;
+}
+
+.treasure-chest--shake {
+  animation: chestShake 0.35s ease;
+}
+
+.treasure-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.treasure-form[aria-disabled='true'] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.treasure-form__fieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.treasure-form__legend {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.treasure-form__inputs {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.treasure-input {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 2px solid rgba(82, 96, 109, 0.25);
+  border-radius: 12px;
+  font-size: 1rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.treasure-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(63, 131, 248, 0.18);
+}
+
+.treasure-input[aria-invalid='true'] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(214, 31, 105, 0.2);
+}
+
+.treasure-form__submit {
+  justify-self: start;
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(63, 131, 248, 0.25);
+  transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.treasure-form__submit:hover,
+.treasure-form__submit:focus-visible {
+  background: var(--accent-strong);
+  box-shadow: 0 12px 26px rgba(63, 131, 248, 0.3);
+}
+
+.treasure-form__submit:active {
+  transform: translateY(1px);
+}
+
+.treasure-message {
+  min-height: 1.5rem;
+  margin: 0;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.treasure-message--success {
+  color: #0f7a4d;
+}
+
+.treasure-message--error {
+  color: var(--danger);
+}
+
 .reward-list {
   margin: 0;
   padding: 0;
@@ -232,6 +465,11 @@ body {
   background: rgba(63, 131, 248, 0.12);
   color: var(--text-strong);
   font-weight: 600;
+}
+
+.reward.reward--loot-open .reward-list__item {
+  background: rgba(42, 157, 89, 0.18);
+  border: 1px solid rgba(42, 157, 89, 0.25);
 }
 
 .reward-list__icon {
@@ -272,6 +510,56 @@ body {
   box-shadow: 0 0 0 4px rgba(63, 131, 248, 0.25);
 }
 
+@keyframes lootReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes coinBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes sparklePulse {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes chestShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
 @media (max-width: 480px) {
   .reward-card {
     padding: 1rem;
@@ -283,6 +571,16 @@ body {
   }
 
   .reset-button {
+    width: 100%;
+    justify-self: stretch;
+    text-align: center;
+  }
+
+  .treasure-form__inputs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .treasure-form__submit {
     width: 100%;
     justify-self: stretch;
     text-align: center;
@@ -338,6 +636,14 @@ body {
 @media (max-width: 960px) {
   .sigil-board__sections {
     --sigil-screen-min: 240px;
+  }
+
+  .treasure-challenge {
+    gap: 1.5rem;
+  }
+
+  .treasure-form__inputs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -804,6 +1110,11 @@ body {
   main.views {
     max-width: 1024px;
     width: min(90vw, 1024px);
+  }
+
+  .treasure-challenge {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 2rem;
   }
 }
 
