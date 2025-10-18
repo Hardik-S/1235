@@ -68,9 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const mapViewHeading = document.getElementById('mapViewHeading');
   const sigilHeading = document.getElementById('sigilBoardHeading');
   const rewardHeading = document.getElementById('reward-heading');
-  const sigilSource = document.getElementById('sigilSource');
-  const sigilStaging = document.getElementById('sigilStaging');
-  const sigilFinal = document.getElementById('sigilFinal');
+  const sigilScreens = {
+    source: sigilBoardSection?.querySelector('.sigil-screen--source') ?? null,
+    staging: sigilBoardSection?.querySelector('.sigil-screen--staging') ?? null,
+    final: sigilBoardSection?.querySelector('.sigil-screen--final') ?? null,
+  };
+  const sigilSource = sigilScreens.source?.querySelector('#sigilSource') ?? null;
+  const sigilStaging = sigilScreens.staging?.querySelector('#sigilStaging') ?? null;
+  const sigilFinal = sigilScreens.final?.querySelector('#sigilFinal') ?? null;
   const successOverlay = document.getElementById('sigilSuccess');
   const resetBtn = document.getElementById('resetBtn');
   const rewardSection = document.getElementById('reward');
@@ -444,6 +449,18 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const renderSigilState = (state) => {
+    if (sigilScreens.source) {
+      sigilScreens.source.classList.toggle('sigil-screen--has-tiles', state.source.length > 0);
+    }
+    if (sigilScreens.staging) {
+      const hasStaging = state.staging.some((tile) => tile != null);
+      sigilScreens.staging.classList.toggle('sigil-screen--has-tiles', hasStaging);
+    }
+    if (sigilScreens.final) {
+      const hasFinal = state.final.some((tile) => tile != null);
+      sigilScreens.final.classList.toggle('sigil-screen--has-tiles', hasFinal);
+    }
+
     if (sigilSource) {
       sigilSource.textContent = '';
       state.source.forEach((tile) => {
