@@ -358,6 +358,104 @@ body {
   color: var(--text-muted);
 }
 
+.lock-planes {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px dashed rgba(82, 96, 109, 0.2);
+  border-radius: 16px;
+  background: rgba(116, 136, 153, 0.08);
+}
+
+.lock-planes__header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.lock-planes__hint {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.lock-planes__list {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.lock-plane {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border: 2px solid rgba(82, 96, 109, 0.25);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  cursor: grab;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lock-plane:focus-visible,
+.lock-plane:hover {
+  border-color: rgba(63, 131, 248, 0.55);
+  box-shadow: 0 4px 10px rgba(63, 131, 248, 0.18);
+}
+
+.lock-plane--dragging {
+  opacity: 0.85;
+  cursor: grabbing;
+  transform: scale(1.02);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.22);
+}
+
+.lock-plane__handle {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+}
+
+.lock-plane__name {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.lock-plane__value {
+  font-family: 'JetBrains Mono', 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.lock-planes__summary {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.lock-plane-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+}
+
+.lock-plane-values dt {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.lock-plane-values dd {
+  margin: 0;
+  font-family: 'JetBrains Mono', 'Fira Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  color: var(--text-muted);
+}
+
 .lock-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
