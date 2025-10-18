@@ -1,22 +1,22 @@
-# Trials of the Gatekeeper
+# Ananya’s Half Birthday Adventure!
 
-This project implements a multi-step browser puzzle built with plain HTML, CSS, and JavaScript. Players speak the key phrase to open the gate, inspect a dedicated map page, and then solve the sigil alignment puzzle before claiming the final reward.
+This project delivers a moonlit half-birthday quest crafted with plain HTML, CSS, and JavaScript. Players whisper the moonlit password to open the gate, explore the Star Chart Expedition, assemble the celebration sequence, and finally unlock Ananya’s half-birthday cache of keepsakes.
 
 ## Structure
 
-- **Landing view** – Presents the gate challenge. Submitting the correct passphrase unlocks navigation to subsequent views.
-- **Map view** – Displays the atlas map in isolation so explorers can gather clues.
-- **Clue view** – Hosts the sigil alignment trial with three horizontally arranged sections.
-- **Reward view** – Reveals the treasure once the sigils are aligned in the required order.
+- **Landing view – Moonlit Password**: Share the celebration password to illuminate the adventure and unlock navigation to the other scenes.
+- **Map view – Star Chart Expedition**: View the dedicated map experience to trace celestial hints and gather clues for the celebration sequence.
+- **Clue view – Celebration Sequence**: Arrange glowing clues across paired panels to choreograph the half-birthday celebration.
+- **Reward view – Half-Birthday Cache**: Review the star chart ledger, enter the celebration values, and unveil the cache of themed treasures.
 
-## Sigil alignment puzzle
+## Celebration sequence puzzle
 
-1. **Section 1** shuffles twelve word tiles on every load. Clicking the plus icon on any tile sends it to the staging grid.
-2. **Section 2** provides a three-column, two-row staging grid. Tiles here expose plus and minus controls—plus advances the tile to the matching alignment column, while minus returns it to the word cache.
-3. **Section 3** features six vertical columns that rotate tiles ninety degrees. When the six target words occupy the correct columns, the page flashes green and automatically advances to the reward view.
+1. **Clue Cache** presents twelve words, shuffled on every load. Selecting a clue sends it into the celebration sequence staging area.
+2. **Sequence Alignment** provides a three-column, two-row grid of celebration slots. Tapping a filled slot releases the clue so you can adjust the choreography.
+3. When all six target clues occupy the correct slots, the interface highlights the success, announces the completion, and escorts players to the Half-Birthday Cache.
 
-The helper logic tracks tile locations, enforces capacity rules, persists completion, and emits success events that trigger the visual celebration.
+Behind the scenes, the helper logic keeps track of clue locations, enforces slot capacity, persists completion, and triggers celebratory overlays once the sequence is correct.
 
 ## Development
 
-No build tooling is required. Open `index.html` in a browser to interact with the experience. The JavaScript module `script.js` orchestrates navigation and puzzle state, and `styles.css` contains all visual styling.
+No build tooling is required. Open `index.html` in a browser to interact with the experience. The JavaScript module `script.js` orchestrates navigation and puzzle state, while `styles.css` provides the star-lit presentation.

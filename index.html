@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Legendary Gate Puzzle</title>
+  <title>Ananya’s Half Birthday Adventure!</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" />
@@ -27,53 +27,53 @@
 <body>
   <nav class="top-nav" aria-label="View navigation">
     <button id="navBack" type="button" class="top-nav__button" aria-label="Go to previous view">Back</button>
-    <span class="top-nav__title">Trials of the Gatekeeper</span>
+    <span class="top-nav__title">Ananya’s Half Birthday Adventure!</span>
     <button id="navForward" type="button" class="top-nav__button" aria-label="Go to next view">Forward</button>
   </nav>
 
   <main class="views">
     <section id="viewLanding" class="view view--active" data-view="landing">
       <header class="page-header">
-        <h1>Trials of the Gatekeeper</h1>
-        <p>Follow the arcane instructions to unlock the gate, unveil the chest, and claim the final reward.</p>
+        <h1>Ananya’s Half Birthday Adventure!</h1>
+        <p>Guide Ananya through a moonlit half-birthday quest—share the secret password, chart the stars, solve the celebration sequence, and unveil the keepsake cache.</p>
       </header>
 
       <section id="gate" class="view-card gate gate--closed" aria-labelledby="gate-heading">
-      <div class="view-icon" aria-hidden="true">🔐</div>
-      <div class="view-content">
-        <h2 id="gate-heading">Gate Challenge</h2>
-        <p>The sentry awaits your answer. Present the correct key phrase to pass through the gate.</p>
-        <div id="gateFormContainer" class="gate-form-container">
-          <form id="atlasForm" class="gate-form" novalidate>
-            <label class="sr-only" for="atlas">Key phrase</label>
-            <div class="gate-form__controls">
-              <input
-                id="atlas"
-                name="atlas"
-                type="text"
-                inputmode="text"
-                autocomplete="off"
-                autocapitalize="none"
-                spellcheck="false"
-                aria-describedby="gateMsg"
-                placeholder="Enter the key phrase"
-                required
-              />
-              <button id="atlasBtn" type="submit">Unlock</button>
-            </div>
-          </form>
+        <div class="view-icon" aria-hidden="true">✦</div>
+        <div class="view-content">
+          <h2 id="gate-heading">Moonlit Password</h2>
+          <p>The moon gate hums with anticipation. Whisper Ananya’s half-birthday password to slip inside.</p>
+          <div id="gateFormContainer" class="gate-form-container">
+            <form id="atlasForm" class="gate-form" novalidate>
+              <label class="sr-only" for="atlas">Moonlit password</label>
+              <div class="gate-form__controls">
+                <input
+                  id="atlas"
+                  name="atlas"
+                  type="text"
+                  inputmode="text"
+                  autocomplete="off"
+                  autocapitalize="none"
+                  spellcheck="false"
+                  aria-describedby="gateMsg"
+                  placeholder="Share the moonlit password"
+                  required
+                />
+                <button id="atlasBtn" type="submit">Open the Moon Gate</button>
+              </div>
+            </form>
+          </div>
+          <p id="gateMsg" class="gate-message" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
-        <p id="gateMsg" class="gate-message" role="status" aria-live="polite" aria-atomic="true"></p>
-      </div>
-    </section>
+      </section>
     </section>
 
     <section id="viewMap" class="view" data-view="map" hidden>
-      <h2 id="mapViewHeading" class="sr-only" tabindex="-1">Atlas Survey Map</h2>
+      <h2 id="mapViewHeading" class="sr-only" tabindex="-1">Star Chart Expedition</h2>
       <div class="map-view__frame">
         <iframe
           id="atlasMapFrame"
-          title="Atlas Survey Map"
+          title="Star Chart Expedition map"
           loading="lazy"
           allowfullscreen
           referrerpolicy="no-referrer-when-downgrade"
@@ -84,27 +84,27 @@
 
     <section id="viewClue" class="view" data-view="clue" hidden>
       <section id="sigilBoard" class="view-card sigil-board" aria-labelledby="sigilBoardHeading">
-        <div class="view-icon" aria-hidden="true">🧩</div>
+        <div class="view-icon" aria-hidden="true">✧</div>
         <div class="view-content sigil-board__content">
-          <h2 id="sigilBoardHeading" tabindex="-1">Sigil Alignment</h2>
-          <p class="sigil-board__intro">Select the six true sigils in the correct order to awaken the gate.</p>
-          <div class="sigil-board__layout" role="group" aria-label="Sigil alignment workspace">
+          <h2 id="sigilBoardHeading" tabindex="-1">Celebration Sequence</h2>
+          <p class="sigil-board__intro">Arrange the six glowing clues to choreograph Ananya’s half-birthday celebration.</p>
+          <div class="sigil-board__layout" role="group" aria-label="Celebration sequence workspace">
             <section class="sigil-panel sigil-panel--cache" aria-labelledby="sigilCacheHeading">
               <header class="sigil-panel__header">
-                <h3 id="sigilCacheHeading">Word Cache</h3>
-                <p>Tap a word to send it to the solution below.</p>
+                <h3 id="sigilCacheHeading">Clue Cache</h3>
+                <p>Tap a clue to send it into the celebration sequence.</p>
               </header>
-              <ul id="sigilCache" class="sigil-cache" aria-live="polite" aria-label="Available words"></ul>
+              <ul id="sigilCache" class="sigil-cache" aria-live="polite" aria-label="Available celebration clues"></ul>
             </section>
             <section class="sigil-panel sigil-panel--solution" aria-labelledby="sigilSolutionHeading">
               <header class="sigil-panel__header">
-                <h3 id="sigilSolutionHeading">Ordered Solution</h3>
-                <p>Fill each slot from left to right. Tap a filled slot to clear it.</p>
+                <h3 id="sigilSolutionHeading">Sequence Alignment</h3>
+                <p>Fill each moment from left to right. Tap a filled slot to release it.</p>
               </header>
               <ol
                 id="sigilSolution"
                 class="sigil-solution"
-                aria-label="Chosen sigils"
+                aria-label="Chosen celebration clues"
                 aria-live="polite"
                 aria-atomic="true"
               ></ol>
@@ -117,23 +117,23 @@
 
     <section id="viewReward" class="view" data-view="reward" hidden>
       <section id="reward" class="view-card reward reward--sealed" aria-labelledby="reward-heading">
-        <div class="view-icon" aria-hidden="true">🎖️</div>
+        <div class="view-icon" aria-hidden="true">✹</div>
         <div class="view-content">
-          <h2 id="reward-heading" tabindex="-1">Reward Chamber</h2>
-          <p>The chamber awaits your triumph. Claim the relic once the sigils align.</p>
+          <h2 id="reward-heading" tabindex="-1">Half-Birthday Cache</h2>
+          <p>A hidden cache waits beneath the moonlight. Unlock it once the celebration sequence is complete.</p>
           <div class="reward-card" role="status" aria-live="polite" aria-atomic="true">
-            <p class="reward-card__intro">The gatekeeper proclaims your victory. Decode the ledger to open the vault.</p>
+            <p class="reward-card__intro">The celebration archivist cheers your progress. Decode the star chart to reveal the cache.</p>
             <div class="treasure-challenge">
               <section class="treasure-challenge__ledger" aria-labelledby="treasureLedgerHeading">
-                <h3 id="treasureLedgerHeading">Sigil Resonance Ledger</h3>
-                <p class="treasure-challenge__help">Ordered sigils with their computed resonance values.</p>
+                <h3 id="treasureLedgerHeading">Star Chart Ledger</h3>
+                <p class="treasure-challenge__help">Celebration clues with their starlit sequence values.</p>
                 <ol id="rewardSequence" class="reward-sequence" aria-live="polite"></ol>
               </section>
               <section class="treasure-challenge__vault" aria-labelledby="treasureVaultHeading">
-                <h3 id="treasureVaultHeading">Vault Access Challenge</h3>
-                <p class="treasure-challenge__help">Enter the six resonance values in order to release the warded chest.</p>
+                <h3 id="treasureVaultHeading">Celebration Cache Console</h3>
+                <p class="treasure-challenge__help">Enter the six celebration values in order to open Ananya’s half-birthday cache.</p>
                 <div id="treasureChest" class="treasure-chest" aria-hidden="true">
-                  <svg class="treasure-chest__art treasure-chest__art--closed" viewBox="0 0 240 180" role="img" aria-label="Closed treasure chest">
+                  <svg class="treasure-chest__art treasure-chest__art--closed" viewBox="0 0 240 180" role="img" aria-label="Closed celebration cache">
                     <rect x="20" y="70" width="200" height="90" rx="18" fill="#8b5e3c" />
                     <rect x="20" y="70" width="200" height="40" rx="18" fill="#9c6b45" />
                     <rect x="34" y="84" width="172" height="62" rx="12" fill="#d4a574" />
@@ -148,7 +148,7 @@
                     class="treasure-chest__art treasure-chest__art--open"
                     viewBox="0 0 260 200"
                     role="img"
-                    aria-label="Open treasure chest overflowing with gold coins, coupons, and snacks"
+                    aria-label="Open celebration cache overflowing with lunar keepsakes and sweet surprises"
                   >
                     <defs>
                       <linearGradient id="coinGradient" x1="0%" x2="0%" y1="0%" y2="100%">
@@ -197,9 +197,9 @@
                 </div>
                 <form id="treasureForm" class="treasure-form" novalidate aria-describedby="treasureMessage">
                   <fieldset class="treasure-form__fieldset">
-                    <legend class="treasure-form__legend">Enter resonance values</legend>
+                    <legend class="treasure-form__legend">Enter celebration values</legend>
                     <div class="treasure-form__inputs">
-                      <label class="sr-only" for="treasureInput0">Value for sigil 1</label>
+                      <label class="sr-only" for="treasureInput0">Value for clue 1</label>
                       <input
                         id="treasureInput0"
                         class="treasure-input"
@@ -207,10 +207,10 @@
                         type="number"
                         inputmode="numeric"
                         autocomplete="off"
-                        aria-label="Value for sigil 1"
+                        aria-label="Value for clue 1"
                         required
                       />
-                      <label class="sr-only" for="treasureInput1">Value for sigil 2</label>
+                      <label class="sr-only" for="treasureInput1">Value for clue 2</label>
                       <input
                         id="treasureInput1"
                         class="treasure-input"
@@ -218,10 +218,10 @@
                         type="number"
                         inputmode="numeric"
                         autocomplete="off"
-                        aria-label="Value for sigil 2"
+                        aria-label="Value for clue 2"
                         required
                       />
-                      <label class="sr-only" for="treasureInput2">Value for sigil 3</label>
+                      <label class="sr-only" for="treasureInput2">Value for clue 3</label>
                       <input
                         id="treasureInput2"
                         class="treasure-input"
@@ -229,10 +229,10 @@
                         type="number"
                         inputmode="numeric"
                         autocomplete="off"
-                        aria-label="Value for sigil 3"
+                        aria-label="Value for clue 3"
                         required
                       />
-                      <label class="sr-only" for="treasureInput3">Value for sigil 4</label>
+                      <label class="sr-only" for="treasureInput3">Value for clue 4</label>
                       <input
                         id="treasureInput3"
                         class="treasure-input"
@@ -240,10 +240,10 @@
                         type="number"
                         inputmode="numeric"
                         autocomplete="off"
-                        aria-label="Value for sigil 4"
+                        aria-label="Value for clue 4"
                         required
                       />
-                      <label class="sr-only" for="treasureInput4">Value for sigil 5</label>
+                      <label class="sr-only" for="treasureInput4">Value for clue 5</label>
                       <input
                         id="treasureInput4"
                         class="treasure-input"
@@ -251,10 +251,10 @@
                         type="number"
                         inputmode="numeric"
                         autocomplete="off"
-                        aria-label="Value for sigil 5"
+                        aria-label="Value for clue 5"
                         required
                       />
-                      <label class="sr-only" for="treasureInput5">Value for sigil 6</label>
+                      <label class="sr-only" for="treasureInput5">Value for clue 6</label>
                       <input
                         id="treasureInput5"
                         class="treasure-input"
@@ -262,31 +262,31 @@
                         type="number"
                         inputmode="numeric"
                         autocomplete="off"
-                        aria-label="Value for sigil 6"
+                        aria-label="Value for clue 6"
                         required
                       />
                     </div>
                   </fieldset>
-                  <button type="submit" class="treasure-form__submit">Unseal the Chest</button>
+                  <button type="submit" class="treasure-form__submit">Open the Celebration Cache</button>
                 </form>
                 <p id="treasureMessage" class="treasure-message" role="status" aria-live="polite" aria-atomic="true"></p>
               </section>
             </div>
             <ul class="reward-list">
               <li class="reward-list__item">
-                <span class="reward-list__icon" aria-hidden="true">🌟</span>
-                <span class="reward-list__text">Starlit Emblem of Passage</span>
+                <span class="reward-list__icon" aria-hidden="true">✶</span>
+                <span class="reward-list__text">Moonbeam Memory Journal</span>
               </li>
               <li class="reward-list__item">
-                <span class="reward-list__icon" aria-hidden="true">🗝️</span>
-                <span class="reward-list__text">Key of Renewed Paths</span>
+                <span class="reward-list__icon" aria-hidden="true">✺</span>
+                <span class="reward-list__text">Half-Birthday Starlight Lantern</span>
               </li>
               <li class="reward-list__item">
-                <span class="reward-list__icon" aria-hidden="true">📜</span>
-                <span class="reward-list__text">Charter of the Gatekeeper's Guild</span>
+                <span class="reward-list__icon" aria-hidden="true">✱</span>
+                <span class="reward-list__text">Midnight Cake Candle Keepsake</span>
               </li>
             </ul>
-            <button id="resetBtn" type="button" class="reset-button">Reset the Trials</button>
+            <button id="resetBtn" type="button" class="reset-button">Restart the Adventure</button>
           </div>
         </div>
       </section>
@@ -294,7 +294,7 @@
   </main>
 
   <div id="sigilSuccess" class="sigil-success" role="status" aria-live="assertive" hidden>
-    <p class="sigil-success__text">Sigils aligned! Advancing…</p>
+    <p class="sigil-success__text">Celebration sequence aligned! Cache unlocking…</p>
   </div>
 
   <script type="module" src="script.js" defer></script>
