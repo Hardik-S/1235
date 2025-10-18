@@ -35,6 +35,14 @@ body {
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(82, 96, 109, 0.12);
+  transform: translateY(0);
+  transition: transform 0.28s ease, opacity 0.2s ease;
+  opacity: 1;
+}
+
+.top-nav--hidden {
+  transform: translateY(-110%);
+  opacity: 0;
 }
 
 .top-nav__title {
