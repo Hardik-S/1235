@@ -11,11 +11,22 @@ const FAILURE_MESSAGE = 'The sentry remains unmoved. Whisper the correct key phr
 const EMPTY_MESSAGE = 'Offer a phrase before seeking passage.';
 const STORED_SUCCESS_MESSAGE = 'The gate already stands open for you.';
 const SUCCESS_OVERLAY_DELAY = 1400;
+const TREASURE_STORAGE_KEY = 'atlasTreasureOpen';
+const TREASURE_DEFAULT_MESSAGE =
+  'Reference the ledger and enter each resonance value to unseal the vault.';
+const TREASURE_INCOMPLETE_MESSAGE =
+  'Complete all six resonance values before attempting to open the chest.';
+const TREASURE_INVALID_MESSAGE =
+  'Resonance values must be numeric. Adjust the ledger entry and try again.';
+const TREASURE_FAILURE_MESSAGE = 'The vault rejects the sequence. Recalibrate and try once more.';
+const TREASURE_SUCCESS_MESSAGE = 'The vault unlatches! Riches spill forth.';
+const TREASURE_STORED_SUCCESS_MESSAGE = 'The chest stands open, its treasures gleaming.';
 
 let gateUnlocked = false;
 let sigilComplete = false;
 let sigilHelper = null;
 let successTimer = null;
+let chestUnlocked = false;
 
 function updateGateMessage(element, message, variant) {
   if (!element) return;
@@ -49,6 +60,30 @@ function updateRewardState(rewardSection, isComplete) {
   rewardSection.classList.toggle('reward--sealed', !isComplete);
 }
 
+function computeSigilValue(word) {
+  const normalized = normalizeWord(word);
+  let total = 0;
+  for (let index = 0; index < normalized.length; index += 1) {
+    const code = normalized.charCodeAt(index);
+    if (code >= 97 && code <= 122) {
+      total += code - 96;
+    }
+  }
+  return total;
+}
+
+function updateTreasureMessage(element, message, variant) {
+  if (!element) return;
+  element.textContent = message;
+  element.classList.remove('treasure-message--error', 'treasure-message--success');
+  if (variant === 'error') {
+    element.classList.add('treasure-message--error');
+  } else if (variant === 'success') {
+    element.classList.add('treasure-message--success');
+  }
+  element.dataset.variant = variant ?? '';
+}
+
 function focusElement(element) {
   if (!element) return;
   element.focus({ preventScroll: true });
@@ -79,6 +114,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const successOverlay = document.getElementById('sigilSuccess');
   const resetBtn = document.getElementById('resetBtn');
   const rewardSection = document.getElementById('reward');
+  const rewardSequence = document.getElementById('rewardSequence');
+  const treasureChest = document.getElementById('treasureChest');
+  const treasureForm = document.getElementById('treasureForm');
+  const treasureMessage = document.getElementById('treasureMessage');
+  const treasureSubmit = treasureForm?.querySelector('.treasure-form__submit') ?? null;
+  const treasureInputs = treasureForm
+    ? Array.from(treasureForm.querySelectorAll('.treasure-input'))
+    : [];
   const viewElements = new Map(
     Array.from(document.querySelectorAll('[data-view]')).map((element) => [element.dataset.view, element]),
   );
@@ -88,6 +131,188 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const sections = { gate: gateSection, board: sigilBoardSection, gateForm: gateFormContainer };
+
+  const treasureDetails = TARGET_SEQUENCE.map((word, index) => ({
+    word,
+    value: computeSigilValue(word),
+    index,
+  }));
+  const treasureValues = treasureDetails.map((detail) => detail.value);
+
+  if (rewardSequence) {
+    rewardSequence.textContent = '';
+    treasureDetails.forEach((detail) => {
+      const item = document.createElement('li');
+      item.className = 'reward-sequence__item';
+
+      const indexBadge = document.createElement('span');
+      indexBadge.className = 'reward-sequence__index';
+      indexBadge.textContent = String(detail.index + 1);
+
+      const wordLabel = document.createElement('span');
+      wordLabel.className = 'reward-sequence__word';
+      wordLabel.textContent = detail.word;
+
+      const valueLabel = document.createElement('span');
+      valueLabel.className = 'reward-sequence__value';
+      valueLabel.textContent = String(detail.value);
+
+      item.append(indexBadge, wordLabel, valueLabel);
+      rewardSequence.appendChild(item);
+    });
+  }
+
+  let chestShakeTimer = null;
+
+  const applyTreasureState = (isOpen, { preserveValues = false, store = true, updateMessage = true } = {}) => {
+    chestUnlocked = isOpen;
+    if (store) {
+      try {
+        if (isOpen) {
+          window.localStorage.setItem(TREASURE_STORAGE_KEY, 'open');
+        } else {
+          window.localStorage.removeItem(TREASURE_STORAGE_KEY);
+        }
+      } catch (error) {
+        // Ignore storage errors
+      }
+    }
+
+    if (treasureChest) {
+      treasureChest.classList.toggle('treasure-chest--open', isOpen);
+      treasureChest.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+      if (!isOpen) {
+        treasureChest.classList.remove('treasure-chest--shake');
+      }
+    }
+
+    if (treasureForm) {
+      treasureForm.setAttribute('aria-disabled', isOpen ? 'true' : 'false');
+      treasureForm.classList.toggle('treasure-form--complete', isOpen);
+    }
+
+    if (treasureSubmit) {
+      treasureSubmit.disabled = isOpen;
+    }
+
+    treasureInputs.forEach((input) => {
+      input.disabled = isOpen;
+      if (!isOpen && !preserveValues) {
+        input.value = '';
+      }
+      input.removeAttribute('aria-invalid');
+    });
+
+    if (rewardSection) {
+      rewardSection.classList.toggle('reward--loot-open', isOpen);
+    }
+
+    if (updateMessage && treasureMessage) {
+      if (isOpen) {
+        updateTreasureMessage(treasureMessage, TREASURE_SUCCESS_MESSAGE, 'success');
+      } else {
+        updateTreasureMessage(treasureMessage, TREASURE_DEFAULT_MESSAGE);
+      }
+    }
+  };
+
+  const triggerChestShake = () => {
+    if (!treasureChest) {
+      return;
+    }
+    treasureChest.classList.remove('treasure-chest--shake');
+    void treasureChest.offsetWidth;
+    treasureChest.classList.add('treasure-chest--shake');
+    window.clearTimeout(chestShakeTimer);
+    chestShakeTimer = window.setTimeout(() => {
+      treasureChest.classList.remove('treasure-chest--shake');
+    }, 420);
+  };
+
+  chestUnlocked = window.localStorage.getItem(TREASURE_STORAGE_KEY) === 'open';
+  applyTreasureState(chestUnlocked, { preserveValues: true, store: false, updateMessage: false });
+  if (treasureMessage) {
+    if (chestUnlocked) {
+      updateTreasureMessage(treasureMessage, TREASURE_STORED_SUCCESS_MESSAGE, 'success');
+    } else {
+      updateTreasureMessage(treasureMessage, TREASURE_DEFAULT_MESSAGE);
+    }
+  }
+
+  treasureInputs.forEach((input) => {
+    input.addEventListener('input', () => {
+      input.removeAttribute('aria-invalid');
+      if (!chestUnlocked && treasureMessage && treasureMessage.dataset.variant === 'error') {
+        updateTreasureMessage(treasureMessage, TREASURE_DEFAULT_MESSAGE);
+      }
+    });
+  });
+
+  if (treasureForm) {
+    treasureForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (chestUnlocked) {
+        return;
+      }
+
+      const values = treasureInputs.map((input) => input.value.trim());
+      const firstEmptyIndex = values.findIndex((value) => value === '');
+      if (firstEmptyIndex !== -1) {
+        updateTreasureMessage(treasureMessage, TREASURE_INCOMPLETE_MESSAGE, 'error');
+        const emptyInput = treasureInputs[firstEmptyIndex];
+        if (emptyInput) {
+          emptyInput.setAttribute('aria-invalid', 'true');
+          emptyInput.focus({ preventScroll: true });
+        }
+        triggerChestShake();
+        return;
+      }
+
+      const numericValues = values.map((value) => Number.parseInt(value, 10));
+      const invalidIndex = numericValues.findIndex((value) => Number.isNaN(value));
+      if (invalidIndex !== -1) {
+        updateTreasureMessage(treasureMessage, TREASURE_INVALID_MESSAGE, 'error');
+        const invalidInput = treasureInputs[invalidIndex];
+        if (invalidInput) {
+          invalidInput.setAttribute('aria-invalid', 'true');
+          invalidInput.focus({ preventScroll: true });
+          invalidInput.select?.();
+        }
+        triggerChestShake();
+        return;
+      }
+
+      const mismatches = numericValues.reduce((accumulator, value, index) => {
+        if (value !== treasureValues[index]) {
+          accumulator.push(index);
+        }
+        return accumulator;
+      }, []);
+
+      if (mismatches.length === 0) {
+        applyTreasureState(true);
+        return;
+      }
+
+      const mismatchSet = new Set(mismatches);
+      treasureInputs.forEach((input, index) => {
+        if (mismatchSet.has(index)) {
+          input.setAttribute('aria-invalid', 'true');
+        } else {
+          input.removeAttribute('aria-invalid');
+        }
+      });
+
+      const firstMismatchInput = treasureInputs[mismatches[0]];
+      if (firstMismatchInput) {
+        firstMismatchInput.focus({ preventScroll: true });
+        firstMismatchInput.select?.();
+      }
+
+      updateTreasureMessage(treasureMessage, TREASURE_FAILURE_MESSAGE, 'error');
+      triggerChestShake();
+    });
+  }
 
   if (topNav) {
     let lastKnownScrollY = window.scrollY || window.pageYOffset || 0;
@@ -535,10 +760,16 @@ document.addEventListener('DOMContentLoaded', () => {
       window.localStorage.removeItem(STORAGE_KEY);
       window.localStorage.removeItem(SIGIL_STORAGE_KEY);
       window.localStorage.removeItem(VIEW_STORAGE_KEY);
+      window.localStorage.removeItem(TREASURE_STORAGE_KEY);
       sigilComplete = false;
+      chestUnlocked = false;
       setGateState(sections, false);
       updateRewardState(rewardSection, false);
       sigilHelper.reset();
+      applyTreasureState(false, { preserveValues: false, store: false, updateMessage: false });
+      if (treasureMessage) {
+        updateTreasureMessage(treasureMessage, TREASURE_DEFAULT_MESSAGE);
+      }
       updateGateMessage(gateMsg, PROMPT_MESSAGE);
       setActiveView('landing', { store: false });
       updateNavButtons();
