@@ -718,8 +718,15 @@ body {
 
 .gate-form__controls {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-flow: row;
   gap: 0.75rem;
+  align-items: stretch;
+  justify-items: stretch;
+}
+
+.gate-form__controls--stacked {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 #atlas {
@@ -1110,7 +1117,7 @@ body {
   }
 
   .gate-form__controls {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .reward-card {
