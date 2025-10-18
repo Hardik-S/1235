@@ -108,24 +108,118 @@
             <p id="lockPlanesSummary" class="lock-planes__summary" aria-live="polite"></p>
             <dl id="lockPlaneValues" class="lock-plane-values" aria-live="polite"></dl>
           </section>
-          <ol id="lockGrid" class="lock-grid" aria-label="Chest lock sequence"></ol>
           <form id="lockForm" class="lock-form" novalidate>
-            <label class="sr-only" for="lockInput">Sigil word</label>
-            <div class="lock-form__controls">
-              <input
-                id="lockInput"
-                name="lockInput"
-                type="text"
-                inputmode="text"
-                autocomplete="off"
-                autocapitalize="none"
-                spellcheck="false"
-                aria-describedby="lockMessage lockProgress"
-                placeholder="Enter the next sigil"
-                required
-              />
-              <button id="lockBtn" type="submit">Align</button>
-            </div>
+            <fieldset class="lock-code">
+              <legend class="lock-code__legend">Sigil value sequence</legend>
+              <p id="lockCodeHint" class="lock-code__hint">
+                Enter the six numeric values revealed by the aligned planes.
+              </p>
+              <div class="lock-code__inputs" role="group" aria-describedby="lockCodeHint lockMessage">
+                <div class="lock-code__cell">
+                  <label class="sr-only lock-code__label" for="lockValue1">Value 1</label>
+                  <input
+                    id="lockValue1"
+                    class="lock-code__input"
+                    name="lockValue1"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    spellcheck="false"
+                    pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
+                    aria-describedby="lockCodeHint lockMessage"
+                    placeholder="0"
+                    data-index="0"
+                    required
+                  />
+                </div>
+                <div class="lock-code__cell">
+                  <label class="sr-only lock-code__label" for="lockValue2">Value 2</label>
+                  <input
+                    id="lockValue2"
+                    class="lock-code__input"
+                    name="lockValue2"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    spellcheck="false"
+                    pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
+                    aria-describedby="lockCodeHint lockMessage"
+                    placeholder="0"
+                    data-index="1"
+                    required
+                  />
+                </div>
+                <div class="lock-code__cell">
+                  <label class="sr-only lock-code__label" for="lockValue3">Value 3</label>
+                  <input
+                    id="lockValue3"
+                    class="lock-code__input"
+                    name="lockValue3"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    spellcheck="false"
+                    pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
+                    aria-describedby="lockCodeHint lockMessage"
+                    placeholder="0"
+                    data-index="2"
+                    required
+                  />
+                </div>
+                <div class="lock-code__cell">
+                  <label class="sr-only lock-code__label" for="lockValue4">Value 4</label>
+                  <input
+                    id="lockValue4"
+                    class="lock-code__input"
+                    name="lockValue4"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    spellcheck="false"
+                    pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
+                    aria-describedby="lockCodeHint lockMessage"
+                    placeholder="0"
+                    data-index="3"
+                    required
+                  />
+                </div>
+                <div class="lock-code__cell">
+                  <label class="sr-only lock-code__label" for="lockValue5">Value 5</label>
+                  <input
+                    id="lockValue5"
+                    class="lock-code__input"
+                    name="lockValue5"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    spellcheck="false"
+                    pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
+                    aria-describedby="lockCodeHint lockMessage"
+                    placeholder="0"
+                    data-index="4"
+                    required
+                  />
+                </div>
+                <div class="lock-code__cell">
+                  <label class="sr-only lock-code__label" for="lockValue6">Value 6</label>
+                  <input
+                    id="lockValue6"
+                    class="lock-code__input"
+                    name="lockValue6"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    spellcheck="false"
+                    pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
+                    aria-describedby="lockCodeHint lockMessage"
+                    placeholder="0"
+                    data-index="5"
+                    required
+                  />
+                </div>
+              </div>
+            </fieldset>
+            <button id="lockBtn" type="submit">Unlock Chest</button>
           </form>
           <p id="lockMessage" class="lock-message" role="status" aria-live="polite" aria-atomic="true"></p>
         </div>
