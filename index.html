@@ -92,6 +92,22 @@
         <p>The warded chest hums with latent magic. Align the sigils to release the locking spell.</p>
         <div class="lock-panel">
           <p id="lockProgress" class="lock-progress" aria-live="polite" aria-atomic="true"></p>
+          <section class="lock-planes" aria-labelledby="lockPlanesHeading">
+            <div class="lock-planes__header">
+              <h3 id="lockPlanesHeading">Lock Planes</h3>
+              <p id="lockPlanesHint" class="lock-planes__hint">
+                Drag and drop to realign the six planes in their intended sequence.
+              </p>
+            </div>
+            <ol
+              id="lockPlanes"
+              class="lock-planes__list"
+              aria-describedby="lockPlanesHint"
+              aria-live="polite"
+            ></ol>
+            <p id="lockPlanesSummary" class="lock-planes__summary" aria-live="polite"></p>
+            <dl id="lockPlaneValues" class="lock-plane-values" aria-live="polite"></dl>
+          </section>
           <ol id="lockGrid" class="lock-grid" aria-label="Chest lock sequence"></ol>
           <form id="lockForm" class="lock-form" novalidate>
             <label class="sr-only" for="lockInput">Sigil word</label>
@@ -143,6 +159,6 @@
     </section>
   </main>
 
-  <script src="script.js" defer></script>
+  <script type="module" src="script.js" defer></script>
 </body>
 </html>
