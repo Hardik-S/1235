@@ -1,7 +1,22 @@
 const diacriticPattern = /\p{Diacritic}/gu;
 const alphaPattern = /[a-z]/;
 
-export const LOCK_PLANE_WORDS = ['Arbre', 'Nazareth', 'Alea', 'Nodal', 'Ymagier', 'Anchor'];
+export const ALL_WORDS = [
+  'Arbre',
+  'Nazareth',
+  'Nodal',
+  'Alea',
+  'Ymagier',
+  'Anchor',
+  'Pencil',
+  'Heater',
+  'Moon',
+  'Siella',
+  'Lingerie',
+  'Western',
+];
+
+export const TARGET_SEQUENCE = ['Arbre', 'Nazareth', 'Alea', 'Nodal', 'Ymagier', 'Anchor'];
 
 export function normalizeWord(value) {
   const stringValue = typeof value === 'string' ? value : String(value ?? '');
@@ -12,190 +27,229 @@ export function normalizeWord(value) {
     .toLowerCase();
 }
 
-export function calculateWordValue(word) {
-  const normalized = normalizeWord(word);
-  let sum = 0;
-
-  for (let index = 0; index < normalized.length; index += 1) {
-    const char = normalized[index];
-    if (!alphaPattern.test(char)) {
-      continue;
-    }
-    const alphabetPosition = char.charCodeAt(0) - 96;
-    const weight = index + 7;
-    sum += alphabetPosition * weight;
+function shuffle(values) {
+  const array = [...values];
+  for (let index = array.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [array[index], array[swapIndex]] = [array[swapIndex], array[index]];
   }
-
-  const modulo = 23.5;
-  const remainder = ((sum % modulo) + modulo) % modulo;
-  return Number.isInteger(remainder) ? remainder : Number.parseFloat(remainder.toFixed(3));
+  return array;
 }
 
-function createPlaneData(word, index) {
-  const normalized = normalizeWord(word);
+function createTile(word, index) {
   return {
-    id: `plane-${index}`,
+    id: `tile-${index}`,
     word,
-    normalized,
-    value: calculateWordValue(word),
+    normalized: normalizeWord(word),
   };
 }
 
-export class LockPlaneHelper extends EventTarget {
-  constructor(words = LOCK_PLANE_WORDS) {
+export class SigilBoardHelper extends EventTarget {
+  constructor(words = ALL_WORDS, target = TARGET_SEQUENCE) {
     super();
-    this.planes = words.map((word, index) => createPlaneData(word, index));
-    this.order = [...this.planes];
-    this.container = null;
-    this.draggedElement = null;
-    this.handleDragStart = this.handleDragStart.bind(this);
-    this.handleDragOver = this.handleDragOver.bind(this);
-    this.handleDrop = this.handleDrop.bind(this);
-    this.handleDragEnd = this.handleDragEnd.bind(this);
+    this.words = [...words];
+    this.targetWords = [...target];
+    this.targetNormalized = this.targetWords.map((word) => normalizeWord(word));
+    this.tiles = new Map();
+    this.locations = new Map();
+    this.state = {
+      source: [],
+      staging: new Array(this.targetWords.length).fill(null),
+      final: new Array(this.targetWords.length).fill(null),
+    };
+    this.successAchieved = false;
+    this.initializeTiles();
   }
 
-  getPlaneSummaries() {
-    return this.order.map((plane, index) => ({
-      index,
-      word: plane.word,
-      normalized: plane.normalized,
-      value: calculateWordValue(plane.word),
-    }));
+  initializeTiles() {
+    this.tiles.clear();
+    this.locations.clear();
+    this.state.source = [];
+    this.state.staging = new Array(this.targetWords.length).fill(null);
+    this.state.final = new Array(this.targetWords.length).fill(null);
+
+    const ordered = shuffle(this.words);
+    ordered.forEach((word, index) => {
+      const tile = createTile(word, index);
+      this.tiles.set(tile.id, tile);
+      this.state.source.push(tile.id);
+      this.locations.set(tile.id, { area: 'source', index: null });
+    });
+    this.successAchieved = false;
   }
 
-  mount(container) {
-    if (!container) return;
-    this.container = container;
-    this.render();
-    this.finalizeOrder();
-    container.addEventListener('dragover', this.handleDragOver);
-    container.addEventListener('drop', this.handleDrop);
+  getState() {
+    return this.createSnapshot();
   }
 
   reset() {
-    this.order = [...this.planes];
-    this.render();
-    this.draggedElement = null;
-    this.finalizeOrder();
+    this.initializeTiles();
+    this.emitState({ suppressSuccess: true });
   }
 
-  unmount() {
-    if (!this.container) return;
-    this.container.removeEventListener('dragover', this.handleDragOver);
-    this.container.removeEventListener('drop', this.handleDrop);
-    this.container.querySelectorAll('.lock-plane').forEach((planeEl) => {
-      planeEl.removeEventListener('dragstart', this.handleDragStart);
-      planeEl.removeEventListener('dragend', this.handleDragEnd);
-    });
-    this.container = null;
+  createSnapshot() {
+    const describe = (id) => {
+      if (!id) return null;
+      const tile = this.tiles.get(id);
+      const location = this.locations.get(id);
+      return tile
+        ? {
+            id: tile.id,
+            word: tile.word,
+            normalized: tile.normalized,
+            location: location?.area ?? 'source',
+            index: location?.index ?? null,
+          }
+        : null;
+    };
+
+    return {
+      source: this.state.source.map((id) => describe(id)).filter((tile) => tile != null),
+      staging: this.state.staging.map((id, index) => {
+        const tile = describe(id);
+        return tile ? { ...tile, index } : null;
+      }),
+      final: this.state.final.map((id, index) => {
+        const tile = describe(id);
+        return tile ? { ...tile, index } : null;
+      }),
+    };
   }
 
-  render() {
-    if (!this.container) return;
-    this.container.textContent = '';
-    const fragment = document.createDocumentFragment();
-    this.order.forEach((plane, index) => {
-      fragment.appendChild(this.createPlaneElement(plane, index));
-    });
-    this.container.appendChild(fragment);
-  }
-
-  createPlaneElement(plane, index) {
-    const item = document.createElement('li');
-    item.className = 'lock-plane';
-    item.draggable = true;
-    item.dataset.id = plane.id;
-    item.dataset.index = String(index);
-    item.tabIndex = 0;
-    item.setAttribute('aria-grabbed', 'false');
-
-    const handle = document.createElement('span');
-    handle.className = 'lock-plane__handle';
-    handle.setAttribute('aria-hidden', 'true');
-    handle.textContent = '⠿';
-
-    const name = document.createElement('span');
-    name.className = 'lock-plane__name';
-    name.textContent = plane.word;
-
-    const value = document.createElement('span');
-    value.className = 'lock-plane__value';
-    value.textContent = this.formatValueDisplay(plane);
-
-    item.append(handle, name, value);
-    item.addEventListener('dragstart', this.handleDragStart);
-    item.addEventListener('dragend', this.handleDragEnd);
-    return item;
-  }
-
-  formatValueDisplay(plane) {
-    const numericValue = calculateWordValue(plane.word);
-    const padded = numericValue % 1 === 0 ? numericValue.toString() : numericValue.toFixed(3);
-    return `↯ ${padded}`;
-  }
-
-  handleDragStart(event) {
-    const target = event.currentTarget;
-    if (!(target instanceof HTMLElement)) return;
-    this.draggedElement = target;
-    target.classList.add('lock-plane--dragging');
-    target.setAttribute('aria-grabbed', 'true');
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', target.dataset.id || '');
-    }
-  }
-
-  handleDragOver(event) {
-    event.preventDefault();
-    if (!this.container || !this.draggedElement) return;
-    const target = event.target instanceof HTMLElement ? event.target.closest('.lock-plane') : null;
-    if (!target || target === this.draggedElement || !(target instanceof HTMLElement)) {
-      return;
-    }
-
-    const targetRect = target.getBoundingClientRect();
-    const isBefore = event.clientY < targetRect.top + targetRect.height / 2;
-    const referenceNode = isBefore ? target : target.nextElementSibling;
-    if (referenceNode !== this.draggedElement) {
-      this.container.insertBefore(this.draggedElement, referenceNode);
-    }
-  }
-
-  handleDrop(event) {
-    event.preventDefault();
-    this.finalizeOrder();
-  }
-
-  handleDragEnd() {
-    if (this.draggedElement) {
-      this.draggedElement.classList.remove('lock-plane--dragging');
-      this.draggedElement.setAttribute('aria-grabbed', 'false');
-    }
-    this.draggedElement = null;
-    this.finalizeOrder();
-  }
-
-  finalizeOrder() {
-    if (!this.container) return;
-    const planeElements = Array.from(this.container.querySelectorAll('.lock-plane'));
-    const nextOrder = [];
-    planeElements.forEach((element) => {
-      const plane = this.planes.find((item) => item.id === element.dataset.id);
-      if (plane) {
-        nextOrder.push(plane);
-      }
-    });
-    this.order = nextOrder;
-    planeElements.forEach((element, index) => {
-      element.dataset.index = String(index);
-    });
+  emitState(options = {}) {
+    const snapshot = this.createSnapshot();
     this.dispatchEvent(
-      new CustomEvent('orderchange', {
-        detail: {
-          order: this.getPlaneSummaries(),
-        },
+      new CustomEvent('statechange', {
+        detail: snapshot,
       }),
     );
+    const success = this.checkSuccess();
+    if (success && !this.successAchieved && !options.suppressSuccess) {
+      this.successAchieved = true;
+      this.dispatchEvent(
+        new CustomEvent('success', {
+          detail: snapshot,
+        }),
+      );
+    } else {
+      this.successAchieved = success;
+    }
+  }
+
+  checkSuccess() {
+    const finalWords = this.state.final.map((id) => {
+      if (!id) return null;
+      const tile = this.tiles.get(id);
+      return tile ? tile.normalized : null;
+    });
+    if (finalWords.some((value) => value == null)) {
+      return false;
+    }
+    return finalWords.every((value, index) => value === this.targetNormalized[index]);
+  }
+
+  removeFromSource(tileId) {
+    const index = this.state.source.indexOf(tileId);
+    if (index !== -1) {
+      this.state.source.splice(index, 1);
+    }
+  }
+
+  moveTileToSource(tileId) {
+    if (!this.tiles.has(tileId)) return false;
+    const location = this.locations.get(tileId);
+    if (location?.area === 'staging') {
+      this.state.staging[location.index] = null;
+    } else if (location?.area === 'final') {
+      this.state.final[location.index] = null;
+    } else if (location?.area === 'source') {
+      return true;
+    }
+    this.removeFromSource(tileId);
+    this.state.source.push(tileId);
+    this.locations.set(tileId, { area: 'source', index: null });
+    this.emitState();
+    return true;
+  }
+
+  placeTileInStaging(tileId, slotIndex = null) {
+    if (!this.tiles.has(tileId)) return false;
+    const targetSlot =
+      slotIndex != null && slotIndex >= 0 && slotIndex < this.state.staging.length
+        ? slotIndex
+        : this.state.staging.findIndex((entry) => entry == null);
+    if (targetSlot === -1) {
+      return false;
+    }
+
+    const location = this.locations.get(tileId);
+    if (location?.area === 'staging' && location.index === targetSlot) {
+      return true;
+    }
+
+    if (location?.area === 'final') {
+      this.state.final[location.index] = null;
+    }
+    if (location?.area === 'staging') {
+      this.state.staging[location.index] = null;
+    }
+    this.removeFromSource(tileId);
+
+    if (this.state.staging[targetSlot] && this.state.staging[targetSlot] !== tileId) {
+      return false;
+    }
+
+    this.state.staging[targetSlot] = tileId;
+    this.locations.set(tileId, { area: 'staging', index: targetSlot });
+    this.emitState();
+    return true;
+  }
+
+  promoteStagingTile(slotIndex) {
+    if (slotIndex < 0 || slotIndex >= this.state.staging.length) return false;
+    const tileId = this.state.staging[slotIndex];
+    if (!tileId) return false;
+    const occupying = this.state.final[slotIndex];
+    if (occupying && occupying !== tileId) {
+      return false;
+    }
+    this.state.staging[slotIndex] = null;
+    this.state.final[slotIndex] = tileId;
+    this.locations.set(tileId, { area: 'final', index: slotIndex });
+    this.emitState();
+    return true;
+  }
+
+  returnFinalToStaging(columnIndex) {
+    if (columnIndex < 0 || columnIndex >= this.state.final.length) return false;
+    const tileId = this.state.final[columnIndex];
+    if (!tileId) return false;
+    if (this.state.staging[columnIndex]) {
+      return false;
+    }
+    this.state.final[columnIndex] = null;
+    this.state.staging[columnIndex] = tileId;
+    this.locations.set(tileId, { area: 'staging', index: columnIndex });
+    this.emitState();
+    return true;
+  }
+
+  completeImmediately() {
+    this.initializeTiles();
+    const used = new Set();
+    this.targetNormalized.forEach((normalized, index) => {
+      const match = Array.from(this.tiles.values()).find(
+        (tile) => tile.normalized === normalized && !used.has(tile.id),
+      );
+      if (!match) {
+        return;
+      }
+      used.add(match.id);
+      this.removeFromSource(match.id);
+      this.state.final[index] = match.id;
+      this.locations.set(match.id, { area: 'final', index });
+    });
+    this.successAchieved = this.checkSuccess();
+    this.emitState({ suppressSuccess: true });
   }
 }
