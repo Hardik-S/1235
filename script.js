@@ -1,19 +1,21 @@
-import { LockPlaneHelper, normalizeWord } from './lock-helper.js';
+import { SigilBoardHelper, normalizeWord, TARGET_SEQUENCE } from './lock-helper.js';
 
 const KEY_PHRASE = 'atlas';
 const STORAGE_KEY = 'atlasOK';
-const LOCK_SEQUENCE_STORAGE_KEY = 'atlasLockSequence';
+const SIGIL_STORAGE_KEY = 'atlasSigilComplete';
 const VIEW_STORAGE_KEY = 'atlasActiveView';
-const VIEW_ORDER = ['landing', 'map', 'clue'];
-const LOCK_VALUES_COUNT = 6;
-const VALUE_TOLERANCE = 0.0005;
+const VIEW_ORDER = ['landing', 'map', 'clue', 'reward'];
 const PROMPT_MESSAGE = 'Speak the key phrase to pass through the gate.';
 const SUCCESS_MESSAGE = 'The gatekeeper bows as the gate swings open.';
 const FAILURE_MESSAGE = 'The sentry remains unmoved. Whisper the correct key phrase.';
 const EMPTY_MESSAGE = 'Offer a phrase before seeking passage.';
 const STORED_SUCCESS_MESSAGE = 'The gate already stands open for you.';
+const SUCCESS_OVERLAY_DELAY = 1400;
 
 let gateUnlocked = false;
+let sigilComplete = false;
+let sigilHelper = null;
+let successTimer = null;
 
 function updateGateMessage(element, message, variant) {
   if (!element) return;
@@ -26,55 +28,30 @@ function updateGateMessage(element, message, variant) {
   }
 }
 
-function setGateState({ gate, chest, gateForm }, isOpen) {
-  if (!gate || !chest) {
+function setGateState({ gate, board, gateForm }, isOpen) {
+  if (!gate) {
     return;
   }
-
   gate.classList.toggle('gate--open', isOpen);
   gate.classList.toggle('gate--closed', !isOpen);
   if (gateForm) {
     gateForm.hidden = isOpen;
   }
-  chest.classList.toggle('chest--locked', !isOpen);
-  chest.classList.toggle('chest--unlocked', isOpen);
+  if (board) {
+    board.classList.toggle('sigil-board--locked', !isOpen);
+  }
   gateUnlocked = isOpen;
 }
 
-function setLockMessage(element, message, variant, form) {
-  if (!element) return;
-  element.textContent = message;
-  element.classList.remove('lock-message--error', 'lock-message--success');
-  if (form) {
-    form.classList.remove('lock-form--error', 'lock-form--success');
-  }
-  if (variant === 'error') {
-    element.classList.add('lock-message--error');
-    if (form) {
-      form.classList.add('lock-form--error');
-    }
-  } else if (variant === 'success') {
-    element.classList.add('lock-message--success');
-    if (form) {
-      form.classList.add('lock-form--success');
-    }
-  }
-}
-
-function syncRewardVisibility(chestSection, rewardSection, isComplete) {
-  if (!chestSection || !rewardSection) return;
-  chestSection.classList.toggle('view-card--hidden', isComplete);
+function updateRewardState(rewardSection, isComplete) {
+  if (!rewardSection) return;
   rewardSection.classList.toggle('reward--revealed', isComplete);
   rewardSection.classList.toggle('reward--sealed', !isComplete);
 }
 
-function focusElement(heading) {
-  if (!heading) return;
-  heading.focus({ preventScroll: false });
-}
-
-function formatPlaneValue(value) {
-  return value % 1 === 0 ? value.toString() : value.toFixed(3);
+function focusElement(element) {
+  if (!element) return;
+  element.focus({ preventScroll: true });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -82,35 +59,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const atlasBtn = document.getElementById('atlasBtn');
   const gateMsg = document.getElementById('gateMsg');
   const gateSection = document.getElementById('gate');
-  const chestSection = document.getElementById('chest');
-  const rewardSection = document.getElementById('reward');
+  const sigilBoardSection = document.getElementById('sigilBoard');
   const gateFormContainer = document.getElementById('gateFormContainer');
   const atlasForm = document.getElementById('atlasForm');
   const navBack = document.getElementById('navBack');
   const navForward = document.getElementById('navForward');
   const mapViewHeading = document.getElementById('mapViewHeading');
-  const chestHeading = document.getElementById('chest-heading');
-  const lockProgress = document.getElementById('lockProgress');
-  const lockForm = document.getElementById('lockForm');
-  const lockBtn = document.getElementById('lockBtn');
-  const lockMessage = document.getElementById('lockMessage');
-  const lockValueInputs = Array.from(document.querySelectorAll('.lock-code__input'));
+  const sigilHeading = document.getElementById('sigilBoardHeading');
+  const rewardHeading = document.getElementById('reward-heading');
+  const sigilSource = document.getElementById('sigilSource');
+  const sigilStaging = document.getElementById('sigilStaging');
+  const sigilFinal = document.getElementById('sigilFinal');
+  const successOverlay = document.getElementById('sigilSuccess');
   const resetBtn = document.getElementById('resetBtn');
-  const planeList = document.getElementById('lockPlanes');
-  const planeSummary = document.getElementById('lockPlanesSummary');
-  const planeValues = document.getElementById('lockPlaneValues');
+  const rewardSection = document.getElementById('reward');
   const viewElements = new Map(
     Array.from(document.querySelectorAll('[data-view]')).map((element) => [element.dataset.view, element]),
   );
 
-  if (!atlasInput || !atlasBtn || !gateMsg || !gateSection || !chestSection || !atlasForm) {
+  if (!atlasInput || !atlasBtn || !gateMsg || !gateSection || !atlasForm) {
     return;
   }
 
-  const sections = { gate: gateSection, chest: chestSection, gateForm: gateFormContainer };
+  const sections = { gate: gateSection, board: sigilBoardSection, gateForm: gateFormContainer };
 
   const storedUnlock = window.localStorage.getItem(STORAGE_KEY) === 'true';
   setGateState(sections, storedUnlock);
+
+  sigilComplete = window.localStorage.getItem(SIGIL_STORAGE_KEY) === 'complete';
+  updateRewardState(rewardSection, sigilComplete);
 
   let activeView = 'landing';
 
@@ -123,6 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (view === 'map' || view === 'clue') {
       return gateUnlocked;
+    }
+    if (view === 'reward') {
+      return gateUnlocked && sigilComplete;
     }
     return false;
   };
@@ -196,12 +176,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (navBack) {
     navBack.addEventListener('click', () => {
       const target = findPrevView();
-      if (target) {
-        const changed = setActiveView(target);
-        if (changed && target === 'landing') {
+      if (!target) return;
+      const changed = setActiveView(target);
+      if (changed) {
+        if (target === 'landing') {
           atlasInput.focus({ preventScroll: true });
-        } else if (changed && target === 'map') {
+        } else if (target === 'map') {
           setTimeout(() => focusElement(mapViewHeading), 120);
+        } else if (target === 'clue') {
+          setTimeout(() => focusElement(sigilHeading), 120);
         }
       }
     });
@@ -210,19 +193,25 @@ document.addEventListener('DOMContentLoaded', () => {
   if (navForward) {
     navForward.addEventListener('click', () => {
       const target = findNextView();
-      if (target) {
-        const changed = setActiveView(target);
-        if (changed && target === 'map') {
+      if (!target) return;
+      const changed = setActiveView(target);
+      if (changed) {
+        if (target === 'map') {
           setTimeout(() => focusElement(mapViewHeading), 120);
-        } else if (changed && target === 'clue') {
-          setTimeout(() => focusElement(chestHeading), 120);
+        } else if (target === 'clue') {
+          setTimeout(() => focusElement(sigilHeading), 120);
+        } else if (target === 'reward') {
+          setTimeout(() => focusElement(rewardHeading), 120);
         }
       }
     });
   }
 
   const storedView = window.localStorage.getItem(VIEW_STORAGE_KEY);
-  const defaultView = storedUnlock ? 'map' : 'landing';
+  let defaultView = storedUnlock ? 'map' : 'landing';
+  if (sigilComplete && storedUnlock) {
+    defaultView = 'reward';
+  }
   const initialView = storedView && canAccessView(storedView) ? storedView : defaultView;
 
   if (storedUnlock) {
@@ -235,10 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!storedUnlock && initialView === 'landing') {
     atlasInput.focus({ preventScroll: true });
-  } else if (storedUnlock && initialView === 'map') {
+  } else if (initialView === 'map') {
     setTimeout(() => focusElement(mapViewHeading), 120);
-  } else if (storedUnlock && initialView === 'clue') {
-    setTimeout(() => focusElement(chestHeading), 120);
+  } else if (initialView === 'clue') {
+    setTimeout(() => focusElement(sigilHeading), 120);
+  } else if (initialView === 'reward') {
+    setTimeout(() => focusElement(rewardHeading), 120);
   }
 
   atlasForm.addEventListener('submit', (event) => {
@@ -255,7 +246,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (normalized === KEY_PHRASE) {
-      window.localStorage.setItem(STORAGE_KEY, 'true');
+      try {
+        window.localStorage.setItem(STORAGE_KEY, 'true');
+      } catch (error) {
+        // Ignore storage errors
+      }
       setGateState(sections, true);
       updateGateMessage(gateMsg, SUCCESS_MESSAGE, 'success');
       atlasInput.value = '';
@@ -283,286 +278,217 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  let lockSequenceComplete = false;
-  let planeHelper = null;
-  if (planeList) {
-    planeHelper = new LockPlaneHelper();
-    planeHelper.mount(planeList);
+  const stagingCells = [];
+  const finalColumns = [];
 
-    const syncPlaneOutputs = (order) => {
-      const data = order && Array.isArray(order) && order.length ? order : planeHelper.getPlaneSummaries();
-      const formattedValues = data.map((entry) => formatPlaneValue(entry.value));
-      const numericValues = data.map((entry) => entry.value);
-      planeList.dataset.order = data.map((entry) => entry.word).join(',');
-      planeList.dataset.normalized = data.map((entry) => entry.normalized).join(',');
-      planeList.dataset.values = formattedValues.join(',');
-      planeList.dataset.numericValues = numericValues.join(',');
-      if (planeSummary) {
-        planeSummary.textContent = `Current order: ${data.map((entry) => entry.word).join(' → ')}`;
-      }
-      if (planeValues) {
-        planeValues.textContent = '';
-        data.forEach((entry) => {
-          const dt = document.createElement('dt');
-          dt.textContent = entry.word;
-          const dd = document.createElement('dd');
-          dd.textContent = formatPlaneValue(entry.value);
-          planeValues.append(dt, dd);
-        });
-      }
-      window.lockPlaneOutputs = {
-        order: data.map((entry) => entry.word),
-        normalized: data.map((entry) => entry.normalized),
-        values: formattedValues,
-        numericValues,
-      };
-    };
-
-    syncPlaneOutputs();
-    planeHelper.addEventListener('orderchange', (event) => {
-      syncPlaneOutputs(event.detail?.order);
-      if (
-        !lockSequenceComplete &&
-        lockForm &&
-        lockMessage &&
-        lockProgress &&
-        lockValueInputs.length === LOCK_VALUES_COUNT
-      ) {
-        clearInputs();
-        clearInputErrors();
-        updateLockProgress(false);
-        setLockMessage(lockMessage, 'Enter the sigil values in order.', undefined, lockForm);
-      }
-    });
-  }
-
-  if (!lockProgress || !lockForm || !lockBtn || !lockMessage || lockValueInputs.length !== LOCK_VALUES_COUNT) {
-    return;
-  }
-  function parseNumericValue(value) {
-    const stringValue = typeof value === 'string' ? value.trim() : String(value ?? '').trim();
-    if (!stringValue) return null;
-    const normalized = stringValue.replace(/[,\s]+/g, '');
-    if (!normalized) return null;
-    if (!/^[-]?\d+(?:\.\d{1,3})?$/.test(normalized)) {
-      return null;
+  if (sigilStaging) {
+    sigilStaging.textContent = '';
+    for (let index = 0; index < TARGET_SEQUENCE.length; index += 1) {
+      const cell = document.createElement('div');
+      cell.className = 'staging-cell';
+      cell.dataset.index = String(index);
+      cell.setAttribute('role', 'gridcell');
+      cell.setAttribute('aria-label', `Staging slot ${index + 1}`);
+      stagingCells.push(cell);
+      sigilStaging.appendChild(cell);
     }
-    const parsed = Number.parseFloat(normalized);
-    return Number.isFinite(parsed) ? parsed : null;
   }
 
-  function getExpectedSequence() {
-    const dataset = planeList?.dataset?.numericValues || '';
-    return dataset
-      .split(',')
-      .map((entry) => parseNumericValue(entry))
-      .filter((entry) => entry != null);
+  if (sigilFinal) {
+    sigilFinal.textContent = '';
+    for (let index = 0; index < TARGET_SEQUENCE.length; index += 1) {
+      const column = document.createElement('div');
+      column.className = 'final-column';
+      column.dataset.index = String(index);
+      column.dataset.label = `Column ${index + 1}`;
+      column.setAttribute('aria-label', `Alignment column ${index + 1}`);
+      finalColumns.push(column);
+      sigilFinal.appendChild(column);
+    }
   }
 
-  function updateLockProgress(isComplete) {
-    const confirmed = isComplete ? LOCK_VALUES_COUNT : 0;
-    lockProgress.textContent = `Sigil values confirmed: ${confirmed} / ${LOCK_VALUES_COUNT}`;
-  }
+  const buildSourceTile = (tile) => {
+    const item = document.createElement('li');
+    item.className = 'word-tile';
+    item.dataset.location = 'source';
 
-  function setCompletionState(isComplete) {
-    lockValueInputs.forEach((input) => {
-      input.disabled = isComplete;
-    });
-    lockBtn.disabled = isComplete;
-  }
+    const label = document.createElement('p');
+    label.className = 'word-tile__label';
+    label.textContent = tile.word;
 
-  function fillInputs(sequence) {
-    if (!Array.isArray(sequence)) return;
-    lockValueInputs.forEach((input, index) => {
-      const value = sequence[index];
-      if (typeof value === 'number' && Number.isFinite(value)) {
-        input.value = formatPlaneValue(value);
+    const controls = document.createElement('div');
+    controls.className = 'word-tile__controls';
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'word-tile__button';
+    addBtn.textContent = '+';
+    addBtn.setAttribute('aria-label', `Send ${tile.word} to the staging grid`);
+    addBtn.addEventListener('click', () => {
+      if (sigilHelper) {
+        sigilHelper.placeTileInStaging(tile.id);
       }
     });
-  }
 
-  function clearInputs() {
-    lockValueInputs.forEach((input) => {
-      input.value = '';
+    controls.appendChild(addBtn);
+    item.append(label, controls);
+    return item;
+  };
+
+  const buildStagingTile = (tile, index) => {
+    const container = document.createElement('div');
+    container.className = 'word-tile';
+    container.dataset.location = 'staging';
+
+    const label = document.createElement('p');
+    label.className = 'word-tile__label';
+    label.textContent = tile.word;
+
+    const advanceControls = document.createElement('div');
+    advanceControls.className = 'word-tile__controls';
+
+    const advanceBtn = document.createElement('button');
+    advanceBtn.type = 'button';
+    advanceBtn.className = 'word-tile__button word-tile__button--secondary';
+    advanceBtn.textContent = '+';
+    advanceBtn.setAttribute('aria-label', `Move ${tile.word} to alignment column ${index + 1}`);
+    advanceBtn.addEventListener('click', () => {
+      if (sigilHelper) {
+        sigilHelper.promoteStagingTile(index);
+      }
     });
-  }
 
-  function clearInputErrors() {
-    lockValueInputs.forEach((input) => {
-      input.classList.remove('lock-code__input--error');
+    const returnControls = document.createElement('div');
+    returnControls.className = 'word-tile__controls word-tile__controls--bottom';
+
+    const returnBtn = document.createElement('button');
+    returnBtn.type = 'button';
+    returnBtn.className = 'word-tile__button word-tile__button--danger';
+    returnBtn.textContent = '−';
+    returnBtn.setAttribute('aria-label', `Return ${tile.word} to the word cache`);
+    returnBtn.addEventListener('click', () => {
+      if (sigilHelper) {
+        sigilHelper.moveTileToSource(tile.id);
+      }
     });
-    lockForm.classList.remove('lock-form--error', 'lock-form--success');
-  }
 
-  function storeSequenceStatus(sequence) {
+    advanceControls.appendChild(advanceBtn);
+    returnControls.appendChild(returnBtn);
+    container.append(label, advanceControls, returnControls);
+    return container;
+  };
+
+  const buildFinalTile = (tile, index) => {
+    const container = document.createElement('div');
+    container.className = 'word-tile word-tile--final';
+    container.dataset.location = 'final';
+
+    const label = document.createElement('p');
+    label.className = 'word-tile__label';
+    label.textContent = tile.word;
+
+    const returnControls = document.createElement('div');
+    returnControls.className = 'word-tile__controls word-tile__controls--bottom';
+
+    const returnBtn = document.createElement('button');
+    returnBtn.type = 'button';
+    returnBtn.className = 'word-tile__button word-tile__button--danger';
+    returnBtn.textContent = '−';
+    returnBtn.setAttribute('aria-label', `Send ${tile.word} back to staging column ${index + 1}`);
+    returnBtn.addEventListener('click', () => {
+      if (sigilHelper) {
+        sigilHelper.returnFinalToStaging(index);
+      }
+    });
+
+    returnControls.appendChild(returnBtn);
+    container.append(label, returnControls);
+    return container;
+  };
+
+  const renderSigilState = (state) => {
+    if (sigilSource) {
+      sigilSource.textContent = '';
+      state.source.forEach((tile) => {
+        sigilSource.appendChild(buildSourceTile(tile));
+      });
+    }
+
+    state.staging.forEach((tile, index) => {
+      const cell = stagingCells[index];
+      if (!cell) return;
+      cell.textContent = '';
+      cell.classList.toggle('staging-cell--active', Boolean(tile));
+      if (tile) {
+        cell.appendChild(buildStagingTile(tile, index));
+      }
+    });
+
+    state.final.forEach((tile, index) => {
+      const column = finalColumns[index];
+      if (!column) return;
+      column.textContent = '';
+      column.classList.toggle('final-column--active', Boolean(tile));
+      if (tile) {
+        column.appendChild(buildFinalTile(tile, index));
+      }
+    });
+  };
+
+  sigilHelper = new SigilBoardHelper();
+  sigilHelper.addEventListener('statechange', (event) => {
+    renderSigilState(event.detail);
+  });
+
+  sigilHelper.addEventListener('success', () => {
+    if (sigilComplete) {
+      return;
+    }
+    sigilComplete = true;
     try {
-      const payload = { status: 'complete', values: sequence };
-      window.localStorage.setItem(LOCK_SEQUENCE_STORAGE_KEY, JSON.stringify(payload));
+      window.localStorage.setItem(SIGIL_STORAGE_KEY, 'complete');
     } catch (error) {
       // Ignore storage errors
     }
-  }
-
-  function readStoredSequenceStatus() {
-    const stored = window.localStorage.getItem(LOCK_SEQUENCE_STORAGE_KEY);
-    if (!stored) return null;
-    try {
-      const parsed = JSON.parse(stored);
-      if (parsed && parsed.status === 'complete') {
-        const values = Array.isArray(parsed.values) ? parsed.values : [];
-        return { status: 'complete', values: values.map((value) => parseNumericValue(value)).filter((value) => value != null) };
+    updateRewardState(rewardSection, true);
+    updateNavButtons();
+    if (successOverlay) {
+      successOverlay.hidden = false;
+      successOverlay.classList.remove('sigil-success--visible');
+      void successOverlay.offsetHeight;
+      successOverlay.classList.add('sigil-success--visible');
+    }
+    window.clearTimeout(successTimer);
+    successTimer = window.setTimeout(() => {
+      if (successOverlay) {
+        successOverlay.hidden = true;
+        successOverlay.classList.remove('sigil-success--visible');
       }
-    } catch (error) {
-      return null;
-    }
-    return null;
-  }
+      if (setActiveView('reward')) {
+        setTimeout(() => focusElement(rewardHeading), 160);
+      }
+    }, SUCCESS_OVERLAY_DELAY);
+  });
 
-  function clearSequenceStatus() {
-    try {
-      window.localStorage.removeItem(LOCK_SEQUENCE_STORAGE_KEY);
-    } catch (error) {
-      // Ignore storage errors
-    }
-  }
-
-  function sequencesMatch(expected, received) {
-    if (!Array.isArray(expected) || !Array.isArray(received)) return false;
-    if (expected.length !== received.length) return false;
-    return expected.every((value, index) => Math.abs(value - received[index]) <= VALUE_TOLERANCE);
-  }
-
-  const storedSequence = readStoredSequenceStatus();
-  if (storedSequence?.status === 'complete' && storedSequence.values.length === LOCK_VALUES_COUNT) {
-    lockSequenceComplete = true;
-    fillInputs(storedSequence.values);
-  } else if (storedSequence?.status === 'complete') {
-    clearSequenceStatus();
-  }
-
-  setCompletionState(lockSequenceComplete);
-  updateLockProgress(lockSequenceComplete);
-  if (lockSequenceComplete) {
-    setLockMessage(lockMessage, 'Chest unlocked!', 'success', lockForm);
+  if (sigilComplete) {
+    sigilHelper.completeImmediately();
   } else {
-    setLockMessage(lockMessage, 'Enter the sigil values in order.', undefined, lockForm);
-  }
-
-  syncRewardVisibility(chestSection, rewardSection, lockSequenceComplete);
-
-  lockValueInputs.forEach((input, index) => {
-    input.addEventListener('input', () => {
-      const sanitized = input.value.replace(/[^0-9.\-]/g, '');
-      if (sanitized !== input.value) {
-        input.value = sanitized;
-      }
-      input.classList.remove('lock-code__input--error');
-      lockForm.classList.remove('lock-form--error');
-    });
-
-    input.addEventListener('focus', () => {
-      input.select();
-      input.classList.remove('lock-code__input--error');
-    });
-
-    input.addEventListener('keydown', (event) => {
-      if (event.key === 'Backspace' && !input.value && index > 0) {
-        const previous = lockValueInputs[index - 1];
-        previous.focus({ preventScroll: true });
-        previous.select();
-      }
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        if (typeof lockForm.requestSubmit === 'function') {
-          lockForm.requestSubmit(lockBtn);
-        } else {
-          lockForm.submit();
-        }
-      }
-    });
-  });
-
-  lockForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    if (lockSequenceComplete) {
-      return;
-    }
-
-    clearInputErrors();
-
-    const expectedSequence = getExpectedSequence();
-    if (expectedSequence.length !== LOCK_VALUES_COUNT) {
-      setLockMessage(
-        lockMessage,
-        'Align all six planes before entering the values.',
-        'error',
-        lockForm,
-      );
-      return;
-    }
-
-    const userSequence = lockValueInputs.map((input) => parseNumericValue(input.value));
-    const invalidIndex = userSequence.findIndex((value) => value == null);
-    if (invalidIndex !== -1) {
-      lockValueInputs.forEach((input, index) => {
-        if (userSequence[index] == null) {
-          input.classList.add('lock-code__input--error');
-        }
-      });
-      const focusTarget = lockValueInputs[invalidIndex];
-      if (focusTarget) {
-        focusTarget.focus({ preventScroll: true });
-        focusTarget.select();
-      }
-      setLockMessage(lockMessage, 'Provide numeric values for all six sigils.', 'error', lockForm);
-      return;
-    }
-
-    if (!sequencesMatch(expectedSequence, userSequence)) {
-      lockValueInputs.forEach((input) => {
-        input.classList.add('lock-code__input--error');
-      });
-      const firstInput = lockValueInputs[0];
-      if (firstInput) {
-        firstInput.focus({ preventScroll: true });
-        firstInput.select();
-      }
-      setLockMessage(lockMessage, 'The sequence falters. Recheck the sigil values.', 'error', lockForm);
-      return;
-    }
-
-    lockSequenceComplete = true;
-    storeSequenceStatus(expectedSequence);
-    fillInputs(expectedSequence);
-    setCompletionState(true);
-    updateLockProgress(true);
-    setLockMessage(lockMessage, 'Chest unlocked!', 'success', lockForm);
-    syncRewardVisibility(chestSection, rewardSection, true);
-  });
-
-  function resetExperience() {
-    window.localStorage.removeItem(STORAGE_KEY);
-    clearSequenceStatus();
-    lockSequenceComplete = false;
-    setGateState(sections, false);
-    setActiveView('landing');
-    updateGateMessage(gateMsg, PROMPT_MESSAGE);
-    atlasInput.value = '';
-    clearInputs();
-    clearInputErrors();
-    setCompletionState(false);
-    updateLockProgress(false);
-    setLockMessage(lockMessage, 'Enter the sigil values in order.', undefined, lockForm);
-    syncRewardVisibility(chestSection, rewardSection, false);
-    if (planeHelper) {
-      planeHelper.reset();
-    }
-    atlasInput.focus({ preventScroll: true });
+    renderSigilState(sigilHelper.getState());
   }
 
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      resetExperience();
+      window.localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem(SIGIL_STORAGE_KEY);
+      window.localStorage.removeItem(VIEW_STORAGE_KEY);
+      sigilComplete = false;
+      setGateState(sections, false);
+      updateRewardState(rewardSection, false);
+      sigilHelper.reset();
+      updateGateMessage(gateMsg, PROMPT_MESSAGE);
+      setActiveView('landing', { store: false });
+      updateNavButtons();
+      atlasInput.focus({ preventScroll: true });
     });
   }
 });

@@ -83,152 +83,47 @@
     </section>
 
     <section id="viewClue" class="view" data-view="clue" hidden>
-      <section id="chest" class="view-card chest chest--locked" aria-labelledby="chest-heading">
-        <div class="view-icon" aria-hidden="true">🧰</div>
+      <section id="sigilBoard" class="view-card sigil-board" aria-labelledby="sigilBoardHeading">
+        <div class="view-icon" aria-hidden="true">🧩</div>
         <div class="view-content">
-          <h2 id="chest-heading" tabindex="-1">Chest Sequence</h2>
-          <p>The warded chest hums with latent magic. Align the sigils to release the locking spell.</p>
-          <div class="lock-panel">
-            <p id="lockProgress" class="lock-progress" aria-live="polite" aria-atomic="true"></p>
-            <section class="lock-planes" aria-labelledby="lockPlanesHeading">
-              <div class="lock-planes__header">
-                <h3 id="lockPlanesHeading">Lock Planes</h3>
-                <p id="lockPlanesHint" class="lock-planes__hint">
-                  Drag and drop to realign the six planes in their intended sequence.
-                </p>
-              </div>
-              <ol
-                id="lockPlanes"
-                class="lock-planes__list"
-                aria-describedby="lockPlanesHint"
-                aria-live="polite"
-              ></ol>
-              <p id="lockPlanesSummary" class="lock-planes__summary" aria-live="polite"></p>
-              <dl id="lockPlaneValues" class="lock-plane-values" aria-live="polite"></dl>
+          <h2 id="sigilBoardHeading" tabindex="-1">Sigil Alignment</h2>
+          <p class="sigil-board__intro">
+            Gather the scattered words, arrange them upon the staging grid, and align the six true sigils in
+            order. When the pattern is perfect, the gate's magic will surge.
+          </p>
+          <div class="sigil-board__sections" role="group" aria-label="Sigil alignment sections">
+            <section class="sigil-zone sigil-zone--source" aria-labelledby="sigilSourceHeading">
+              <header class="sigil-zone__header">
+                <h3 id="sigilSourceHeading">Section 1: Word Cache</h3>
+                <p>Shuffled on each visit. Select a sigil to send it to the staging grid.</p>
+              </header>
+              <ul id="sigilSource" class="sigil-list" aria-live="polite" aria-label="Available words"></ul>
             </section>
-            <form id="lockForm" class="lock-form" novalidate>
-              <fieldset class="lock-code">
-                <legend class="lock-code__legend">Sigil value sequence</legend>
-                <p id="lockCodeHint" class="lock-code__hint">
-                  Enter the six numeric values revealed by the aligned planes.
-                </p>
-                <div class="lock-code__inputs" role="group" aria-describedby="lockCodeHint lockMessage">
-                  <div class="lock-code__cell">
-                    <label class="sr-only lock-code__label" for="lockValue1">Value 1</label>
-                    <input
-                      id="lockValue1"
-                      class="lock-code__input"
-                      name="lockValue1"
-                      type="text"
-                      inputmode="decimal"
-                      autocomplete="off"
-                      spellcheck="false"
-                      pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
-                      aria-describedby="lockCodeHint lockMessage"
-                      placeholder="0"
-                      data-index="0"
-                      required
-                    />
-                  </div>
-                  <div class="lock-code__cell">
-                    <label class="sr-only lock-code__label" for="lockValue2">Value 2</label>
-                    <input
-                      id="lockValue2"
-                      class="lock-code__input"
-                      name="lockValue2"
-                      type="text"
-                      inputmode="decimal"
-                      autocomplete="off"
-                      spellcheck="false"
-                      pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
-                      aria-describedby="lockCodeHint lockMessage"
-                      placeholder="0"
-                      data-index="1"
-                      required
-                    />
-                  </div>
-                  <div class="lock-code__cell">
-                    <label class="sr-only lock-code__label" for="lockValue3">Value 3</label>
-                    <input
-                      id="lockValue3"
-                      class="lock-code__input"
-                      name="lockValue3"
-                      type="text"
-                      inputmode="decimal"
-                      autocomplete="off"
-                      spellcheck="false"
-                      pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
-                      aria-describedby="lockCodeHint lockMessage"
-                      placeholder="0"
-                      data-index="2"
-                      required
-                    />
-                  </div>
-                  <div class="lock-code__cell">
-                    <label class="sr-only lock-code__label" for="lockValue4">Value 4</label>
-                    <input
-                      id="lockValue4"
-                      class="lock-code__input"
-                      name="lockValue4"
-                      type="text"
-                      inputmode="decimal"
-                      autocomplete="off"
-                      spellcheck="false"
-                      pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
-                      aria-describedby="lockCodeHint lockMessage"
-                      placeholder="0"
-                      data-index="3"
-                      required
-                    />
-                  </div>
-                  <div class="lock-code__cell">
-                    <label class="sr-only lock-code__label" for="lockValue5">Value 5</label>
-                    <input
-                      id="lockValue5"
-                      class="lock-code__input"
-                      name="lockValue5"
-                      type="text"
-                      inputmode="decimal"
-                      autocomplete="off"
-                      spellcheck="false"
-                      pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
-                      aria-describedby="lockCodeHint lockMessage"
-                      placeholder="0"
-                      data-index="4"
-                      required
-                    />
-                  </div>
-                  <div class="lock-code__cell">
-                    <label class="sr-only lock-code__label" for="lockValue6">Value 6</label>
-                    <input
-                      id="lockValue6"
-                      class="lock-code__input"
-                      name="lockValue6"
-                      type="text"
-                      inputmode="decimal"
-                      autocomplete="off"
-                      spellcheck="false"
-                      pattern="^-?[0-9]+(?:\.[0-9]{1,3})?$"
-                      aria-describedby="lockCodeHint lockMessage"
-                      placeholder="0"
-                      data-index="5"
-                      required
-                    />
-                  </div>
-                </div>
-              </fieldset>
-              <button id="lockBtn" type="submit">Unlock Chest</button>
-            </form>
-            <p id="lockMessage" class="lock-message" role="status" aria-live="polite" aria-atomic="true"></p>
+            <section class="sigil-zone sigil-zone--staging" aria-labelledby="sigilStagingHeading">
+              <header class="sigil-zone__header">
+                <h3 id="sigilStagingHeading">Section 2: Staging Grid</h3>
+                <p>Three columns and two rows. Use the controls on each tile to advance or retreat.</p>
+              </header>
+              <div id="sigilStaging" class="staging-grid" role="grid" aria-label="Staging grid"></div>
+            </section>
+            <section class="sigil-zone sigil-zone--final" aria-labelledby="sigilFinalHeading">
+              <header class="sigil-zone__header">
+                <h3 id="sigilFinalHeading">Section 3: Alignment Columns</h3>
+                <p>Fill each column with the destined word. Tiles rotate to face the barrier.</p>
+              </header>
+              <div id="sigilFinal" class="final-columns" role="group" aria-label="Alignment columns"></div>
+            </section>
           </div>
         </div>
       </section>
+    </section>
 
+    <section id="viewReward" class="view" data-view="reward" hidden>
       <section id="reward" class="view-card reward reward--sealed" aria-labelledby="reward-heading">
         <div class="view-icon" aria-hidden="true">🎖️</div>
         <div class="view-content">
-          <h2 id="reward-heading">Reward Chamber</h2>
-          <p>The chamber awaits your triumph. Claim the relic once the gate and chest trials are complete.</p>
+          <h2 id="reward-heading" tabindex="-1">Reward Chamber</h2>
+          <p>The chamber awaits your triumph. Claim the relic once the sigils align.</p>
           <div class="reward-card" role="status" aria-live="polite" aria-atomic="true">
             <p class="reward-card__intro">The gatekeeper proclaims your victory. Take your spoils:</p>
             <ul class="reward-list">
@@ -251,6 +146,10 @@
       </section>
     </section>
   </main>
+
+  <div id="sigilSuccess" class="sigil-success" role="status" aria-live="assertive" hidden>
+    <p class="sigil-success__text">Sigils aligned! Advancing…</p>
+  </div>
 
   <script type="module" src="script.js" defer></script>
 </body>
