@@ -3,6 +3,8 @@ import { LockPlaneHelper, normalizeWord } from './lock-helper.js';
 const KEY_PHRASE = 'atlas';
 const STORAGE_KEY = 'atlasOK';
 const LOCK_SEQUENCE_STORAGE_KEY = 'atlasLockSequence';
+const VIEW_STORAGE_KEY = 'atlasActiveView';
+const VIEW_ORDER = ['landing', 'map', 'clue'];
 const LOCK_VALUES_COUNT = 6;
 const VALUE_TOLERANCE = 0.0005;
 const PROMPT_MESSAGE = 'Speak the key phrase to pass through the gate.';
@@ -10,6 +12,8 @@ const SUCCESS_MESSAGE = 'The gatekeeper bows as the gate swings open.';
 const FAILURE_MESSAGE = 'The sentry remains unmoved. Whisper the correct key phrase.';
 const EMPTY_MESSAGE = 'Offer a phrase before seeking passage.';
 const STORED_SUCCESS_MESSAGE = 'The gate already stands open for you.';
+
+let gateUnlocked = false;
 
 function updateGateMessage(element, message, variant) {
   if (!element) return;
@@ -22,7 +26,7 @@ function updateGateMessage(element, message, variant) {
   }
 }
 
-function setGateState({ gate, chest, gateForm, map }, isOpen) {
+function setGateState({ gate, chest, gateForm }, isOpen) {
   if (!gate || !chest) {
     return;
   }
@@ -32,11 +36,9 @@ function setGateState({ gate, chest, gateForm, map }, isOpen) {
   if (gateForm) {
     gateForm.hidden = isOpen;
   }
-  if (map) {
-    map.hidden = !isOpen;
-  }
   chest.classList.toggle('chest--locked', !isOpen);
   chest.classList.toggle('chest--unlocked', isOpen);
+  gateUnlocked = isOpen;
 }
 
 function setLockMessage(element, message, variant, form) {
@@ -66,7 +68,7 @@ function syncRewardVisibility(chestSection, rewardSection, isComplete) {
   rewardSection.classList.toggle('reward--sealed', !isComplete);
 }
 
-function focusMapHeading(heading) {
+function focusElement(heading) {
   if (!heading) return;
   heading.focus({ preventScroll: false });
 }
@@ -82,10 +84,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const gateSection = document.getElementById('gate');
   const chestSection = document.getElementById('chest');
   const rewardSection = document.getElementById('reward');
-  const gateMap = document.getElementById('gateMap');
-  const gateMapHeading = document.getElementById('gateMapHeading');
   const gateFormContainer = document.getElementById('gateFormContainer');
   const atlasForm = document.getElementById('atlasForm');
+  const navBack = document.getElementById('navBack');
+  const navForward = document.getElementById('navForward');
+  const mapViewHeading = document.getElementById('mapViewHeading');
+  const chestHeading = document.getElementById('chest-heading');
   const lockProgress = document.getElementById('lockProgress');
   const lockForm = document.getElementById('lockForm');
   const lockBtn = document.getElementById('lockBtn');
@@ -95,21 +99,146 @@ document.addEventListener('DOMContentLoaded', () => {
   const planeList = document.getElementById('lockPlanes');
   const planeSummary = document.getElementById('lockPlanesSummary');
   const planeValues = document.getElementById('lockPlaneValues');
+  const viewElements = new Map(
+    Array.from(document.querySelectorAll('[data-view]')).map((element) => [element.dataset.view, element]),
+  );
 
   if (!atlasInput || !atlasBtn || !gateMsg || !gateSection || !chestSection || !atlasForm) {
     return;
   }
 
-  const sections = { gate: gateSection, chest: chestSection, gateForm: gateFormContainer, map: gateMap };
+  const sections = { gate: gateSection, chest: chestSection, gateForm: gateFormContainer };
 
   const storedUnlock = window.localStorage.getItem(STORAGE_KEY) === 'true';
   setGateState(sections, storedUnlock);
+
+  let activeView = 'landing';
+
+  const canAccessView = (view) => {
+    if (!viewElements.has(view)) {
+      return false;
+    }
+    if (view === 'landing') {
+      return true;
+    }
+    if (view === 'map' || view === 'clue') {
+      return gateUnlocked;
+    }
+    return false;
+  };
+
+  const persistView = (view) => {
+    try {
+      window.localStorage.setItem(VIEW_STORAGE_KEY, view);
+    } catch (error) {
+      // Ignore storage errors
+    }
+  };
+
+  const updateViewVisibility = (view) => {
+    viewElements.forEach((element, key) => {
+      const isActive = key === view;
+      element.hidden = !isActive;
+      element.classList.toggle('view--active', isActive);
+    });
+  };
+
+  const findPrevView = () => {
+    const currentIndex = VIEW_ORDER.indexOf(activeView);
+    for (let index = currentIndex - 1; index >= 0; index -= 1) {
+      const candidate = VIEW_ORDER[index];
+      if (canAccessView(candidate)) {
+        return candidate;
+      }
+    }
+    return null;
+  };
+
+  const findNextView = () => {
+    const currentIndex = VIEW_ORDER.indexOf(activeView);
+    for (let index = currentIndex + 1; index < VIEW_ORDER.length; index += 1) {
+      const candidate = VIEW_ORDER[index];
+      if (canAccessView(candidate)) {
+        return candidate;
+      }
+    }
+    return null;
+  };
+
+  const updateNavButtons = () => {
+    if (navBack) {
+      const previous = findPrevView();
+      navBack.disabled = !previous;
+      navBack.setAttribute('aria-disabled', navBack.disabled ? 'true' : 'false');
+      navBack.dataset.target = previous ?? '';
+    }
+    if (navForward) {
+      const next = findNextView();
+      navForward.disabled = !next;
+      navForward.setAttribute('aria-disabled', navForward.disabled ? 'true' : 'false');
+      navForward.dataset.target = next ?? '';
+    }
+  };
+
+  const setActiveView = (view, { store = true } = {}) => {
+    if (!canAccessView(view)) {
+      return false;
+    }
+    activeView = view;
+    updateViewVisibility(view);
+    if (store) {
+      persistView(view);
+    }
+    updateNavButtons();
+    return true;
+  };
+
+  if (navBack) {
+    navBack.addEventListener('click', () => {
+      const target = findPrevView();
+      if (target) {
+        const changed = setActiveView(target);
+        if (changed && target === 'landing') {
+          atlasInput.focus({ preventScroll: true });
+        } else if (changed && target === 'map') {
+          setTimeout(() => focusElement(mapViewHeading), 120);
+        }
+      }
+    });
+  }
+
+  if (navForward) {
+    navForward.addEventListener('click', () => {
+      const target = findNextView();
+      if (target) {
+        const changed = setActiveView(target);
+        if (changed && target === 'map') {
+          setTimeout(() => focusElement(mapViewHeading), 120);
+        } else if (changed && target === 'clue') {
+          setTimeout(() => focusElement(chestHeading), 120);
+        }
+      }
+    });
+  }
+
+  const storedView = window.localStorage.getItem(VIEW_STORAGE_KEY);
+  const defaultView = storedUnlock ? 'map' : 'landing';
+  const initialView = storedView && canAccessView(storedView) ? storedView : defaultView;
+
   if (storedUnlock) {
     updateGateMessage(gateMsg, STORED_SUCCESS_MESSAGE, 'success');
-    setTimeout(() => focusMapHeading(gateMapHeading), 120);
   } else {
     updateGateMessage(gateMsg, PROMPT_MESSAGE);
+  }
+
+  setActiveView(initialView, { store: false });
+
+  if (!storedUnlock && initialView === 'landing') {
     atlasInput.focus({ preventScroll: true });
+  } else if (storedUnlock && initialView === 'map') {
+    setTimeout(() => focusElement(mapViewHeading), 120);
+  } else if (storedUnlock && initialView === 'clue') {
+    setTimeout(() => focusElement(chestHeading), 120);
   }
 
   atlasForm.addEventListener('submit', (event) => {
@@ -121,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setGateState(sections, false);
       updateGateMessage(gateMsg, EMPTY_MESSAGE, 'error');
       atlasInput.focus({ preventScroll: true });
+      setActiveView('landing');
       return;
     }
 
@@ -129,13 +259,16 @@ document.addEventListener('DOMContentLoaded', () => {
       setGateState(sections, true);
       updateGateMessage(gateMsg, SUCCESS_MESSAGE, 'success');
       atlasInput.value = '';
-      setTimeout(() => focusMapHeading(gateMapHeading), 160);
+      if (setActiveView('map')) {
+        setTimeout(() => focusElement(mapViewHeading), 160);
+      }
     } else {
       window.localStorage.removeItem(STORAGE_KEY);
       setGateState(sections, false);
       updateGateMessage(gateMsg, FAILURE_MESSAGE, 'error');
       atlasInput.focus({ preventScroll: true });
       atlasInput.select();
+      setActiveView('landing');
     }
   });
 
@@ -412,6 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearSequenceStatus();
     lockSequenceComplete = false;
     setGateState(sections, false);
+    setActiveView('landing');
     updateGateMessage(gateMsg, PROMPT_MESSAGE);
     atlasInput.value = '';
     clearInputs();
